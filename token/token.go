@@ -32,3 +32,10 @@ const (
 	FUNCTION = "FUNCTION"
 	LET      = "LET"
 )
+
+func NewToken(tt TokenType, ch byte) Token {
+	return Token{
+		Type:    tt,
+		Literal: string(ch),
+	}
+}
