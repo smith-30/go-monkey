@@ -7,32 +7,6 @@ type Token struct {
 	Literal string
 }
 
-const (
-	ILLEGAL = "ILLEGAL"
-	EOF     = "EOF"
-
-	// 識別子 + リテラル
-	INDENT = "INDENT" // add, foobar, x, y, ...
-	INT    = "INT"
-
-	// 演算子
-	ASSIGN = "="
-	PLUS   = "+"
-
-	// デリミタ
-	COMMA     = ","
-	SEMICOLON = ";"
-
-	LPAREN = ")"
-	RPAREN = "("
-	LBRACE = "{"
-	RBRACE = "}"
-
-	// キーワード
-	FUNCTION = "FUNCTION"
-	LET      = "LET"
-)
-
 func NewToken(tt TokenType, ch byte) Token {
 	return Token{
 		Type:    tt,
