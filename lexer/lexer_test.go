@@ -46,7 +46,12 @@ let add = fn(x, y) {
 let result = add(five, ten);
 !-/*5;
 5 < 10 > 5;
-`,
+
+if (5 < 10) {
+	return true;
+} else {
+	return false;
+}`,
 			},
 			want: []token.Token{
 				token.Token{Type: token.LET, Literal: "let"},
@@ -97,7 +102,23 @@ let result = add(five, ten);
 				token.Token{Type: token.GT, Literal: ">"},
 				token.Token{Type: token.INT, Literal: "5"},
 				token.Token{Type: token.SEMICOLON, Literal: ";"},
-
+				token.Token{Type: token.IF, Literal: "if"},
+				token.Token{Type: token.LPAREN, Literal: "("},
+				token.Token{Type: token.INT, Literal: "5"},
+				token.Token{Type: token.LT, Literal: "<"},
+				token.Token{Type: token.INT, Literal: "10"},
+				token.Token{Type: token.RPAREN, Literal: ")"},
+				token.Token{Type: token.LBRACE, Literal: "{"},
+				token.Token{Type: token.RETURN, Literal: "return"},
+				token.Token{Type: token.TRUE, Literal: "true"},
+				token.Token{Type: token.SEMICOLON, Literal: ";"},
+				token.Token{Type: token.RBRACE, Literal: "}"},
+				token.Token{Type: token.ELSE, Literal: "else"},
+				token.Token{Type: token.LBRACE, Literal: "{"},
+				token.Token{Type: token.RETURN, Literal: "return"},
+				token.Token{Type: token.FALSE, Literal: "false"},
+				token.Token{Type: token.SEMICOLON, Literal: ";"},
+				token.Token{Type: token.RBRACE, Literal: "}"},
 				token.Token{Type: token.EOF, Literal: ""},
 			},
 		},
