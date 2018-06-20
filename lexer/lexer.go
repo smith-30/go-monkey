@@ -36,7 +36,18 @@ func (l *Lexer) NextToken() token.Token {
 
 	switch l.ch {
 	case '=':
-		t = token.NewToken(token.ASSIGN, l.ch)
+		// prefetch and check EQ
+		if l.peekChar() == '=' {
+			ch := l.ch
+			l.readChar()
+			literal := string(ch) + string(l.ch)
+			t = token.Token{
+				Type: token.EQ,
+				Literal: literal, 
+			}
+		} else {
+			t = token.NewToken(token.ASSIGN, l.ch)
+		}
 	case ';':
 		t = token.NewToken(token.SEMICOLON, l.ch)
 	case ')':
@@ -54,7 +65,18 @@ func (l *Lexer) NextToken() token.Token {
 	case '-':
 		t = token.NewToken(token.MINUS, l.ch)
 	case '!':
-		t = token.NewToken(token.BANG, l.ch)
+		// prefetch and check EQ
+		if l.peekChar() == '=' {
+			ch := l.ch
+			l.readChar()
+			literal := string(ch) + string(l.ch)
+			t = token.Token{
+				Type: token.NOT_EQ,
+				Literal: literal, 
+			}
+		} else {
+			t = token.NewToken(token.BANG, l.ch)
+		}
 	case '*':
 		t = token.NewToken(token.ASTERISK, l.ch)
 	case '/':
@@ -100,6 +122,18 @@ func (l *Lexer) readNumber() string {
 		l.readChar()
 	}
 	return l.input[position:l.position]
+}
+
+// peek -> 覗き見
+// The difference in the difficulty of language analysis depends on the prefetching range.
+//
+// prefetching input.
+func (l *Lexer) peekChar() byte {
+	if l.readPosition >= len(l.input) {
+		return 0
+	} else {
+		return l.input[l.readPosition]
+	}
 }
 
 func (l *Lexer) skipWhitespace() {

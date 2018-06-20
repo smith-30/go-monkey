@@ -51,7 +51,12 @@ if (5 < 10) {
 	return true;
 } else {
 	return false;
-}`,
+}
+
+10 == 10;
+10 != 9;
+
+`,
 			},
 			want: []token.Token{
 				token.Token{Type: token.LET, Literal: "let"},
@@ -119,6 +124,14 @@ if (5 < 10) {
 				token.Token{Type: token.FALSE, Literal: "false"},
 				token.Token{Type: token.SEMICOLON, Literal: ";"},
 				token.Token{Type: token.RBRACE, Literal: "}"},
+				token.Token{Type: token.INT, Literal: "10"},
+				token.Token{Type: token.EQ, Literal: "=="},
+				token.Token{Type: token.INT, Literal: "10"},
+				token.Token{Type: token.SEMICOLON, Literal: ";"},
+				token.Token{Type: token.INT, Literal: "10"},
+				token.Token{Type: token.NOT_EQ, Literal: "!="},
+				token.Token{Type: token.INT, Literal: "9"},
+				token.Token{Type: token.SEMICOLON, Literal: ";"},
 				token.Token{Type: token.EOF, Literal: ""},
 			},
 		},
