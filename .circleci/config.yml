@@ -27,4 +27,4 @@ jobs:
       - run: go get github.com/mattn/goveralls
       - run: go get -v -t ./...
       - run: go vet $(go list ./... | grep -v /vendor/)
-      - run: make ci-test
+      - run: make test
