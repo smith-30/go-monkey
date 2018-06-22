@@ -26,7 +26,7 @@ jobs:
       - run: go get github.com/modocache/gover
       - run: go get github.com/mattn/goveralls
       - run: go get -v -t ./...
-      - run: go vet $(go list ./... | grep -v /vendor/)
+      - run: make vet
       - run: make ci-test
       - run: gover
       - run: goveralls -v -service=circle-ci -coverprofile=gover.coverprofile -repotoken $COVERALLS_TOKEN
