@@ -1,0 +1,24 @@
+language: go
+sudo: false
+go:
+  - 1.9
+  - 1.10
+  - tip
+
+matrix:
+  allow_failures:
+    - go: tip
+
+install:
+  - go get golang.org/x/tools/cmd/cover
+  - go get github.com/modocache/gover
+  - go get github.com/mattn/goveralls
+  - go get -v -t ./...
+
+script:
+  - go vet $(go list ./... | grep -v /vendor/)
+  - make ci-test
+
+after_script:
+  - gover10
+  - goveralls -coverprofile=gover.coverprofile -repotoken $COVERALLS_TOKEN
