@@ -16,7 +16,18 @@ type (
 		peekToken    token.Token
 
 		errors []string
+
+		prefixParseFns map[token.TokenType]prefixParseFn
+		infixParseFns  map[token.TokenType]infixParseFn
 	}
+)
+
+type (
+	// 前置構文解析
+	prefixParseFn func() ast.Expression
+
+	// 中置構文解析
+	infixParseFn func(ast.Expression) ast.Expression
 )
 
 func New(l *lexer.Lexer) *Parser {
@@ -30,6 +41,14 @@ func New(l *lexer.Lexer) *Parser {
 	p.nextToken()
 
 	return p
+}
+
+func (p *Parser) registerPrefix(tt token.TokenType, fn prefixParseFn) {
+	p.prefixParseFns[tt] = fn
+}
+
+func (p *Parser) registerInfix(tt token.TokenType, fn infixParseFn) {
+	p.infixParseFns[tt] = fn
 }
 
 func (p *Parser) Errors() []string {

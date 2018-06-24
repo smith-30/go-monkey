@@ -152,3 +152,69 @@ func checkParseErrors(t *testing.T, p *Parser) {
 	}
 	t.FailNow()
 }
+
+func TestIdentifierExpression(t *testing.T) {
+	type fields struct {
+		input string
+	}
+	type exp struct {
+		want  int
+		value string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		exp    exp
+	}{
+		{
+			name: "simple identifier",
+			fields: fields{
+				input: `foobar;`,
+			},
+			exp: exp{
+				want:  1,
+				value: "foobar",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := lexer.New(tt.fields.input)
+			p := New(l)
+
+			program := p.ParseProgram()
+			checkParseErrors(t, p)
+
+			if program == nil {
+				t.Fatalf("ParseProgram() returned nil")
+			}
+
+			if len(program.Statements) != tt.exp.want {
+				t.Fatalf("Program.Statements does not contain %d statements. got = %d", tt.exp.want, len(program.Statements))
+			}
+
+			for _, stmt := range program.Statements {
+				expStmt, ok := stmt.(*ast.ExpressionStatement)
+				if !ok {
+					t.Errorf("expStmt not *ast.ExpressionStatement. got=%T", stmt)
+					continue
+				}
+
+				ident, ok := expStmt.Expression.(*ast.Identifier)
+				if !ok {
+					t.Errorf("expStmt not *ast.Identifier. got=%T", expStmt.Expression)
+					continue
+				}
+				if ident.Value != tt.exp.value {
+					t.Errorf("ident.Value is not %q, got %q", tt.exp.value, ident.Value)
+				}
+
+				if ident.TokenLiteral() != tt.exp.value {
+					t.Errorf("ident.TokenLiteral is not %q, got %q", tt.exp.value, ident.TokenLiteral())
+				}
+			}
+		})
+	}
+
+}
