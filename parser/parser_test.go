@@ -218,3 +218,71 @@ func TestIdentifierExpression(t *testing.T) {
 	}
 
 }
+
+func TestIntegerLiteralExpression(t *testing.T) {
+	type fields struct {
+		input string
+	}
+	type exp struct {
+		wantStmtCount int
+		literal       string
+		value         int64
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		exp    exp
+	}{
+		{
+			name: "integer",
+			fields: fields{
+				input: `5;`,
+			},
+			exp: exp{
+				wantStmtCount: 1,
+				literal:       "5",
+				value:         5,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := lexer.New(tt.fields.input)
+			p := New(l)
+
+			program := p.ParseProgram()
+			checkParseErrors(t, p)
+
+			if program == nil {
+				t.Fatalf("ParseProgram() returned nil")
+			}
+
+			if len(program.Statements) != tt.exp.wantStmtCount {
+				t.Fatalf("Program.Statements does not contain %d statements. got = %d", tt.exp.wantStmtCount, len(program.Statements))
+			}
+
+			for _, stmt := range program.Statements {
+				expStmt, ok := stmt.(*ast.ExpressionStatement)
+				if !ok {
+					t.Errorf("expStmt not *ast.IntegerLiteral. got=%T", stmt)
+					continue
+				}
+
+				literal, ok := expStmt.Expression.(*ast.IntegerLiteral)
+				if !ok {
+					t.Errorf("expStmt not *ast.Identifier. got=%T", expStmt.Expression)
+					continue
+				}
+				if literal.Value != tt.exp.value {
+					t.Errorf("literal.Value is not %q, got %q", tt.exp.value, literal.Value)
+				}
+
+				if literal.TokenLiteral() != tt.exp.literal {
+					t.Errorf("literal.TokenLiteral is not %q, got %q", tt.exp.literal, literal.TokenLiteral())
+				}
+			}
+		})
+	}
+
+}
