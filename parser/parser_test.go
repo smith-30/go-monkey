@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/smith-30/go-monkey/ast"
@@ -284,5 +285,101 @@ func TestIntegerLiteralExpression(t *testing.T) {
 			}
 		})
 	}
+}
 
+func TestParsingPrefixExpressions(t *testing.T) {
+	type fields struct {
+		input string
+	}
+	type exp struct {
+		wantStmtCount int
+		operator      string
+		value         int64
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		exp    exp
+	}{
+		{
+			name: "`!`",
+			fields: fields{
+				input: `!5;`,
+			},
+			exp: exp{
+				wantStmtCount: 1,
+				operator:      "!",
+				value:         5,
+			},
+		},
+		{
+			name: "`-`",
+			fields: fields{
+				input: `-15;`,
+			},
+			exp: exp{
+				wantStmtCount: 1,
+				operator:      "-",
+				value:         15,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := lexer.New(tt.fields.input)
+			p := New(l)
+
+			program := p.ParseProgram()
+			checkParseErrors(t, p)
+
+			if program == nil {
+				t.Fatalf("ParseProgram() returned nil")
+			}
+
+			if len(program.Statements) != tt.exp.wantStmtCount {
+				t.Fatalf("Program.Statements does not contain %d statements. got = %d", tt.exp.wantStmtCount, len(program.Statements))
+			}
+
+			for _, stmt := range program.Statements {
+				expStmt, ok := stmt.(*ast.ExpressionStatement)
+				if !ok {
+					t.Errorf("expStmt not *ast.IntegerLiteral. got=%T", stmt)
+					continue
+				}
+
+				prefixExp, ok := expStmt.Expression.(*ast.PrefixExpression)
+				if !ok {
+					t.Errorf("expStmt not *ast.PrefixExpression. got=%T", expStmt.Expression)
+					continue
+				}
+				if prefixExp.Operator != tt.exp.operator {
+					t.Errorf("prefixExp.Value is not %q, got %q", tt.exp.operator, prefixExp.Operator)
+				}
+
+				if !testIntegerLiteral(t, prefixExp.Right, tt.exp.value) {
+					return
+				}
+			}
+		})
+	}
+}
+
+func testIntegerLiteral(t *testing.T, il ast.Expression, value int64) bool {
+	integer, ok := il.(*ast.IntegerLiteral)
+	if !ok {
+		t.Errorf("il is not *ast.IntegerLiteral. got=%T", il)
+		return false
+	}
+
+	if integer.Value != value {
+		t.Errorf("integer.Value is not %d. got=%d", value, integer.Value)
+		return false
+	}
+
+	if integer.TokenLiteral() != fmt.Sprintf("%d", value) {
+		t.Errorf("integer.Value is not %d. got=%s", value, integer.TokenLiteral())
+		return false
+	}
+	return true
 }
