@@ -112,6 +112,8 @@ func (p *Parser) parsePrefixExpression() ast.Expression {
 		Operator: p.currentToken.Literal,
 	}
 
+	// The prefix modifier is used with at least one token.
+	// Therefore, advance parsing by one
 	p.nextToken()
 
 	expression.Right = p.parseExpression(PREFIX)
