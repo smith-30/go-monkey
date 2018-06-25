@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"sync"
 	"testing"
 
 	"github.com/smith-30/go-monkey/ast"
@@ -382,4 +383,162 @@ func testIntegerLiteral(t *testing.T, il ast.Expression, value int64) bool {
 		return false
 	}
 	return true
+}
+
+func TestParsingInfixExpressions(t *testing.T) {
+	type fields struct {
+		input string
+	}
+	type exp struct {
+		wantStmtCount int
+		leftValue     int64
+		operator      string
+		rightValue    int64
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		exp    exp
+	}{
+		{
+			name:   "`+`",
+			fields: fields{input: `5 + 5;`},
+			exp: exp{
+				wantStmtCount: 1,
+				leftValue:     5,
+				operator:      "+",
+				rightValue:    5,
+			},
+		},
+		{
+			name:   "`-`",
+			fields: fields{input: `5 - 5;`},
+			exp: exp{
+				wantStmtCount: 1,
+				leftValue:     5,
+				operator:      "-",
+				rightValue:    5,
+			},
+		},
+		{
+			name:   "`*`",
+			fields: fields{input: `5 * 5;`},
+			exp: exp{
+				wantStmtCount: 1,
+				leftValue:     5,
+				operator:      "*",
+				rightValue:    5,
+			},
+		},
+		{
+			name:   "`/`",
+			fields: fields{input: `5 / 5;`},
+			exp: exp{
+				wantStmtCount: 1,
+				leftValue:     5,
+				operator:      "/",
+				rightValue:    5,
+			},
+		},
+		{
+			name:   "`>`",
+			fields: fields{input: `5 > 5;`},
+			exp: exp{
+				wantStmtCount: 1,
+				leftValue:     5,
+				operator:      ">",
+				rightValue:    5,
+			},
+		},
+		{
+			name:   "`<`",
+			fields: fields{input: `5 < 5;`},
+			exp: exp{
+				wantStmtCount: 1,
+				leftValue:     5,
+				operator:      "<",
+				rightValue:    5,
+			},
+		},
+		{
+			name:   "`==`",
+			fields: fields{input: `5 == 5;`},
+			exp: exp{
+				wantStmtCount: 1,
+				leftValue:     5,
+				operator:      "==",
+				rightValue:    5,
+			},
+		},
+		{
+			name:   "`!=`",
+			fields: fields{input: `5 != 5;`},
+			exp: exp{
+				wantStmtCount: 1,
+				leftValue:     5,
+				operator:      "!=",
+				rightValue:    5,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := lexer.New(tt.fields.input)
+			p := New(l)
+
+			program := p.ParseProgram()
+			checkParseErrors(t, p)
+
+			if program == nil {
+				t.Fatalf("ParseProgram() returned nil")
+			}
+
+			if len(program.Statements) != tt.exp.wantStmtCount {
+				t.Fatalf("Program.Statements does not contain %d statements. got = %d", tt.exp.wantStmtCount, len(program.Statements))
+			}
+
+			for _, stmt := range program.Statements {
+				expStmt, ok := stmt.(*ast.ExpressionStatement)
+				if !ok {
+					t.Errorf("expStmt not *ast.IntegerLiteral. got=%T", stmt)
+					continue
+				}
+
+				prefixExp, ok := expStmt.Expression.(*ast.InfixExpression)
+				if !ok {
+					t.Errorf("expStmt not *ast.PrefixExpression. got=%T", expStmt.Expression)
+					continue
+				}
+
+				wg := &sync.WaitGroup{}
+
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					if !testIntegerLiteral(t, prefixExp.Left, tt.exp.leftValue) {
+						return
+					}
+				}()
+
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					if prefixExp.Operator != tt.exp.operator {
+						t.Errorf("prefixExp.Value is not %q, got %q", tt.exp.operator, prefixExp.Operator)
+					}
+				}()
+
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					if !testIntegerLiteral(t, prefixExp.Right, tt.exp.rightValue) {
+						return
+					}
+				}()
+
+				wg.Wait()
+			}
+		})
+	}
 }
