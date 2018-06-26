@@ -542,3 +542,86 @@ func TestParsingInfixExpressions(t *testing.T) {
 		})
 	}
 }
+
+func TestOperatorPresedenceParsing(t *testing.T) {
+	type fields struct {
+		input string
+	}
+	type exp struct {
+		val string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		exp    exp
+	}{
+		{
+			name:   "`-a * b`",
+			fields: fields{input: `-a * b`},
+			exp: exp{
+				val: "((-a) * b)",
+			},
+		},
+		{
+			name:   "`!-a`",
+			fields: fields{input: `!-a`},
+			exp: exp{
+				val: "(!(-a))",
+			},
+		},
+		{
+			name:   "`*`",
+			fields: fields{input: `5 * 5;`},
+			exp: exp{
+				val: "",
+			},
+		},
+		{
+			name:   "`a + b + c`",
+			fields: fields{input: `a + b + c`},
+			exp: exp{
+				val: "((a + b) + c)",
+			},
+		},
+		{
+			name:   "`a + b - c`",
+			fields: fields{input: `a + b - c`},
+			exp: exp{
+				val: "((a + b) - c)",
+			},
+		},
+		{
+			name:   "`a * b * c`",
+			fields: fields{input: `a * b * c`},
+			exp: exp{
+				val: "((a * b) * c)",
+			},
+		},
+		{
+			name:   "`a * b / c`",
+			fields: fields{input: `a * b / c`},
+			exp: exp{
+				val: "((a * b) / c)",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := lexer.New(tt.fields.input)
+			p := New(l)
+
+			program := p.ParseProgram()
+			checkParseErrors(t, p)
+
+			if program == nil {
+				t.Fatalf("ParseProgram() returned nil")
+			}
+
+			act := program.String()
+			if act != tt.exp.val {
+				t.Errorf("exp=%q, got=%q", tt.exp.val, act)
+			}
+		})
+	}
+}
