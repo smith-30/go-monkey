@@ -161,6 +161,8 @@ func (p *Parser) parsePrefixExpression() ast.Expression {
 	return expression
 }
 
+// tips
+// set first row: defer untrace(trace("parseInfixExpression"))  for debug
 func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 	expression := &ast.InfixExpression{
 		Token:    p.currentToken,
