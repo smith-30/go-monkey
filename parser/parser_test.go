@@ -558,51 +558,57 @@ func TestOperatorPresedenceParsing(t *testing.T) {
 		{
 			name:   "`-a * b`",
 			fields: fields{input: `-a * b`},
-			exp: exp{
-				val: "((-a) * b)",
-			},
+			exp:    exp{val: "((-a) * b)"},
 		},
 		{
 			name:   "`!-a`",
 			fields: fields{input: `!-a`},
-			exp: exp{
-				val: "(!(-a))",
-			},
-		},
-		{
-			name:   "`*`",
-			fields: fields{input: `5 * 5;`},
-			exp: exp{
-				val: "",
-			},
+			exp:    exp{val: "(!(-a))"},
 		},
 		{
 			name:   "`a + b + c`",
 			fields: fields{input: `a + b + c`},
-			exp: exp{
-				val: "((a + b) + c)",
-			},
+			exp:    exp{val: "((a + b) + c)"},
 		},
 		{
 			name:   "`a + b - c`",
 			fields: fields{input: `a + b - c`},
-			exp: exp{
-				val: "((a + b) - c)",
-			},
+			exp:    exp{val: "((a + b) - c)"},
 		},
 		{
 			name:   "`a * b * c`",
 			fields: fields{input: `a * b * c`},
-			exp: exp{
-				val: "((a * b) * c)",
-			},
+			exp:    exp{val: "((a * b) * c)"},
 		},
 		{
 			name:   "`a * b / c`",
 			fields: fields{input: `a * b / c`},
-			exp: exp{
-				val: "((a * b) / c)",
-			},
+			exp:    exp{val: "((a * b) / c)"},
+		},
+		{
+			name:   "`a + b * c + d / e - f `",
+			fields: fields{input: `a + b * c + d / e - f`},
+			exp:    exp{val: "(((a + (b * c)) + (d / e)) - f)"},
+		},
+		{
+			name:   "`3 + 4; -5 * 5`",
+			fields: fields{input: `3 + 4; -5 * 5`},
+			exp:    exp{val: "(3 + 4)((-5) * 5)"},
+		},
+		{
+			name:   "`5 > 4 == 3 < 4`",
+			fields: fields{input: `5 > 4 == 3 < 4`},
+			exp:    exp{val: "((5 > 4) == (3 < 4))"},
+		},
+		{
+			name:   "`5 < 4 != 3 > 4`",
+			fields: fields{input: `5 < 4 != 3 > 4`},
+			exp:    exp{val: "((5 < 4) != (3 > 4))"},
+		},
+		{
+			name:   "`3 + 4 * 5 == 3 * 1 + 4 * 5`",
+			fields: fields{input: `3 + 4 * 5 == 3 * 1 + 4 * 5`},
+			exp:    exp{val: "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))"},
 		},
 	}
 
