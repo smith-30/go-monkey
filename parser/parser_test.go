@@ -142,19 +142,6 @@ return 838383;
 	}
 }
 
-func checkParseErrors(t *testing.T, p *Parser) {
-	errors := p.Errors()
-	if len(errors) == 0 {
-		return
-	}
-
-	t.Errorf("parser has %d errors", len(errors))
-	for _, msg := range errors {
-		t.Errorf("parser error: %q", msg)
-	}
-	t.FailNow()
-}
-
 func TestIdentifierExpression(t *testing.T) {
 	type fields struct {
 		input string
@@ -267,17 +254,95 @@ func TestIntegerLiteralExpression(t *testing.T) {
 			for _, stmt := range program.Statements {
 				expStmt, ok := stmt.(*ast.ExpressionStatement)
 				if !ok {
-					t.Errorf("expStmt not *ast.IntegerLiteral. got=%T", stmt)
+					t.Errorf("expStmt not *ast.ExpressionStatement. got=%T", stmt)
 					continue
 				}
 
 				literal, ok := expStmt.Expression.(*ast.IntegerLiteral)
 				if !ok {
-					t.Errorf("expStmt not *ast.Identifier. got=%T", expStmt.Expression)
+					t.Errorf("expStmt not *ast.IntegerLiteral. got=%T", expStmt.Expression)
 					continue
 				}
 				if literal.Value != tt.exp.value {
 					t.Errorf("literal.Value is not %q, got %q", tt.exp.value, literal.Value)
+				}
+
+				if literal.TokenLiteral() != tt.exp.literal {
+					t.Errorf("literal.TokenLiteral is not %q, got %q", tt.exp.literal, literal.TokenLiteral())
+				}
+			}
+		})
+	}
+}
+
+func TestBooleanExpression(t *testing.T) {
+	type fields struct {
+		input string
+	}
+	type exp struct {
+		wantStmtCount int
+		literal       string
+		value         bool
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		exp    exp
+	}{
+		{
+			name: "false",
+			fields: fields{
+				input: `false;`,
+			},
+			exp: exp{
+				wantStmtCount: 1,
+				literal:       "false",
+				value:         false,
+			},
+		},
+		{
+			name: "true",
+			fields: fields{
+				input: `true;`,
+			},
+			exp: exp{
+				wantStmtCount: 1,
+				literal:       "true",
+				value:         true,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := lexer.New(tt.fields.input)
+			p := New(l)
+
+			program := p.ParseProgram()
+			checkParseErrors(t, p)
+
+			if program == nil {
+				t.Fatalf("ParseProgram() returned nil")
+			}
+
+			if len(program.Statements) != tt.exp.wantStmtCount {
+				t.Fatalf("Program.Statements does not contain %d statements. got = %d", tt.exp.wantStmtCount, len(program.Statements))
+			}
+
+			for _, stmt := range program.Statements {
+				expStmt, ok := stmt.(*ast.ExpressionStatement)
+				if !ok {
+					t.Errorf("expStmt not *ast.ExpressionStatement. got=%T", stmt)
+					continue
+				}
+
+				literal, ok := expStmt.Expression.(*ast.Boolean)
+				if !ok {
+					t.Errorf("expStmt not *ast.IntegerLiteral. got=%T", expStmt.Expression)
+					continue
+				}
+				if literal.Value != tt.exp.value {
+					t.Errorf("literal.Value is not %v, got %v", tt.exp.value, literal.Value)
 				}
 
 				if literal.TokenLiteral() != tt.exp.literal {
@@ -695,4 +760,17 @@ func testInfixExpression(
 
 	result = true
 	return result
+}
+
+func checkParseErrors(t *testing.T, p *Parser) {
+	errors := p.Errors()
+	if len(errors) == 0 {
+		return
+	}
+
+	t.Errorf("parser has %d errors", len(errors))
+	for _, msg := range errors {
+		t.Errorf("parser error: %q", msg)
+	}
+	t.FailNow()
 }
