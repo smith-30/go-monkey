@@ -2,7 +2,6 @@ package parser
 
 import (
 	"fmt"
-	"sync"
 	"testing"
 
 	"github.com/smith-30/go-monkey/ast"
@@ -360,7 +359,7 @@ func TestParsingPrefixExpressions(t *testing.T) {
 	type exp struct {
 		wantStmtCount int
 		operator      string
-		value         int64
+		value         interface{}
 	}
 	tests := []struct {
 		name   string
@@ -387,6 +386,28 @@ func TestParsingPrefixExpressions(t *testing.T) {
 				wantStmtCount: 1,
 				operator:      "-",
 				value:         15,
+			},
+		},
+		{
+			name: "`!true`",
+			fields: fields{
+				input: `!true;`,
+			},
+			exp: exp{
+				wantStmtCount: 1,
+				operator:      "!",
+				value:         true,
+			},
+		},
+		{
+			name: "`!false`",
+			fields: fields{
+				input: `!false;`,
+			},
+			exp: exp{
+				wantStmtCount: 1,
+				operator:      "!",
+				value:         false,
 			},
 		},
 	}
@@ -456,9 +477,9 @@ func TestParsingInfixExpressions(t *testing.T) {
 	}
 	type exp struct {
 		wantStmtCount int
-		leftValue     int64
+		leftValue     interface{}
 		operator      string
-		rightValue    int64
+		rightValue    interface{}
 	}
 	tests := []struct {
 		name   string
@@ -545,6 +566,36 @@ func TestParsingInfixExpressions(t *testing.T) {
 				rightValue:    5,
 			},
 		},
+		{
+			name:   "`true == true`",
+			fields: fields{input: `true == true`},
+			exp: exp{
+				wantStmtCount: 1,
+				leftValue:     true,
+				operator:      "==",
+				rightValue:    true,
+			},
+		},
+		{
+			name:   "`true != false`",
+			fields: fields{input: `true != false`},
+			exp: exp{
+				wantStmtCount: 1,
+				leftValue:     true,
+				operator:      "!=",
+				rightValue:    false,
+			},
+		},
+		{
+			name:   "`false == false`",
+			fields: fields{input: `false == false`},
+			exp: exp{
+				wantStmtCount: 1,
+				leftValue:     false,
+				operator:      "==",
+				rightValue:    false,
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -576,33 +627,9 @@ func TestParsingInfixExpressions(t *testing.T) {
 					continue
 				}
 
-				wg := &sync.WaitGroup{}
-
-				wg.Add(1)
-				go func() {
-					defer wg.Done()
-					if !testLiteralExpression(t, prefixExp.Left, tt.exp.leftValue) {
-						return
-					}
-				}()
-
-				wg.Add(1)
-				go func() {
-					defer wg.Done()
-					if prefixExp.Operator != tt.exp.operator {
-						t.Errorf("prefixExp.Value is not %q, got %q", tt.exp.operator, prefixExp.Operator)
-					}
-				}()
-
-				wg.Add(1)
-				go func() {
-					defer wg.Done()
-					if !testLiteralExpression(t, prefixExp.Right, tt.exp.rightValue) {
-						return
-					}
-				}()
-
-				wg.Wait()
+				if !testInfixExpression(t, prefixExp, tt.exp.leftValue, tt.exp.operator, tt.exp.rightValue) {
+					return
+				}
 			}
 		})
 	}
@@ -746,10 +773,31 @@ func testLiteralExpression(t *testing.T, exp ast.Expression, expected interface{
 		return testIntegerLiteral(t, exp, v)
 	case string:
 		return testIdentifier(t, exp, v)
+	case bool:
+		return testBooleanLiteral(t, exp, v)
 	}
 
 	t.Errorf("type of exp not handled. got=%T", exp)
 	return false
+}
+
+func testBooleanLiteral(t *testing.T, exp ast.Expression, value bool) bool {
+	b, ok := exp.(*ast.Boolean)
+	if !ok {
+		t.Errorf("exp not *ast.Boolean. got=%T", exp)
+		return false
+	}
+
+	if b.Value != value {
+		t.Errorf("b.Value %t, value %t", b.Value, value)
+		return false
+	}
+
+	if b.TokenLiteral() != fmt.Sprintf("%t", value) {
+		t.Errorf("b.TokenLiteral %s, value %t", b.TokenLiteral(), value)
+	}
+
+	return true
 }
 
 func testInfixExpression(
