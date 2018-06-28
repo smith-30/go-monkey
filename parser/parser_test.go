@@ -722,6 +722,31 @@ func TestOperatorPresedenceParsing(t *testing.T) {
 			fields: fields{input: `3 < 5 == true`},
 			exp:    exp{val: "((3 < 5) == true)"},
 		},
+		{
+			name:   "1 + (2 + 3) + 4",
+			fields: fields{input: `1 + (2 + 3) + 4`},
+			exp:    exp{val: "((1 + (2 + 3)) + 4)"},
+		},
+		{
+			name:   "(5 + 5) * 2",
+			fields: fields{input: `(5 + 5) * 2`},
+			exp:    exp{val: "((5 + 5) * 2)"},
+		},
+		{
+			name:   "2 / (5 + 5)",
+			fields: fields{input: `2 / (5 + 5)`},
+			exp:    exp{val: "(2 / (5 + 5))"},
+		},
+		{
+			name:   "-(5 + 5)",
+			fields: fields{input: `-(5 + 5)`},
+			exp:    exp{val: "(-(5 + 5))"},
+		},
+		{
+			name:   "!(true == true)",
+			fields: fields{input: `!(true == true)`},
+			exp:    exp{val: "(!(true == true))"},
+		},
 	}
 
 	for _, tt := range tests {
