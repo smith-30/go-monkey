@@ -675,6 +675,26 @@ func TestOperatorPresedenceParsing(t *testing.T) {
 			fields: fields{input: `3 + 4 * 5 == 3 * 1 + 4 * 5`},
 			exp:    exp{val: "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))"},
 		},
+		{
+			name:   "true",
+			fields: fields{input: `true`},
+			exp:    exp{val: "true"},
+		},
+		{
+			name:   "true",
+			fields: fields{input: `false`},
+			exp:    exp{val: "false"},
+		},
+		{
+			name:   "3 > 5 == false",
+			fields: fields{input: `3 > 5 == false`},
+			exp:    exp{val: "((3 > 5) == false)"},
+		},
+		{
+			name:   "3 < 5 == true",
+			fields: fields{input: `3 < 5 == true`},
+			exp:    exp{val: "((3 < 5) == true)"},
+		},
 	}
 
 	for _, tt := range tests {
