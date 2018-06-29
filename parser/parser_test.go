@@ -207,6 +207,84 @@ func TestIdentifierExpression(t *testing.T) {
 
 }
 
+func TestIfExpression(t *testing.T) {
+	type fields struct {
+		input string
+	}
+	type exp struct {
+		value string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		exp    exp
+	}{
+		{
+			name: "if (x < y) { x }",
+			fields: fields{
+				input: `foobar;`,
+			},
+			exp: exp{
+				value: "foobar",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := lexer.New(tt.fields.input)
+			p := New(l)
+
+			program := p.ParseProgram()
+			checkParseErrors(t, p)
+
+			if program == nil {
+				t.Fatalf("ParseProgram() returned nil")
+			}
+
+			if len(program.Statements) != 1 {
+				t.Fatalf("Program.Statements does not contain %d statements. got = %d", 1, len(program.Statements))
+			}
+
+			for _, stmt := range program.Statements {
+				expStmt, ok := stmt.(*ast.ExpressionStatement)
+				if !ok {
+					t.Errorf("expStmt not *ast.ExpressionStatement. got=%T", stmt)
+					continue
+				}
+
+				ident, ok := expStmt.Expression.(*ast.IfExpression)
+				if !ok {
+					t.Errorf("expStmt not *ast.IfExpression. got=%T", expStmt.Expression)
+					continue
+				}
+
+				if !testInfixExpression(t, ident.Condition, "x", "<", "y") {
+					return
+				}
+
+				if len(ident.Consequence.Statements) != 1 {
+					t.Errorf("Consequence does not contain %d statements. got = %d", 1, len(ident.Consequence.Statements))
+				}
+
+				consequence, ok := ident.Consequence.Statements[0].(*ast.ExpressionStatement)
+				if !ok {
+					t.Errorf("Statements[0] is not *ast.ExpressionStatement. got=%T", expStmt.Expression)
+				}
+
+				if !testIdentifier(t, consequence.Expression, "x") {
+					return
+				}
+
+				if ident.Alternative != nil {
+					t.Errorf("ident.Alternative.Statemants is not nil. got=%#v", ident.Alternative)
+				}
+			}
+		})
+	}
+
+}
+
 func TestIntegerLiteralExpression(t *testing.T) {
 	type fields struct {
 		input string
