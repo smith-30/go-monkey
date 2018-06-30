@@ -282,7 +282,6 @@ func TestIfExpression(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 // Todo
@@ -795,6 +794,10 @@ func TestParsingInfixExpressions(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestFunctionLiteralParsing(t *testing.T) {
+
 }
 
 func TestOperatorPresedenceParsing(t *testing.T) {
