@@ -367,6 +367,161 @@ func TestIfElseExpression(t *testing.T) {
 
 }
 
+func TestFunctionLiteralParsing(t *testing.T) {
+	type fields struct {
+		input string
+	}
+	type exp struct {
+		value      string
+		paramCount int
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		exp    exp
+	}{
+		{
+			name: "fn(x, y) { x + y; }",
+			fields: fields{
+				input: `fn(x, y) { x + y; }`,
+			},
+			exp: exp{
+				value:      "fn(x, y) { x + y; }",
+				paramCount: 2,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := lexer.New(tt.fields.input)
+			p := New(l)
+
+			program := p.ParseProgram()
+			checkParseErrors(t, p)
+
+			if program == nil {
+				t.Fatalf("ParseProgram() returned nil")
+			}
+
+			if len(program.Statements) != 1 {
+				t.Fatalf("Program.Statements does not contain %d statements. got = %d", 1, len(program.Statements))
+			}
+
+			for _, stmt := range program.Statements {
+				expStmt, ok := stmt.(*ast.ExpressionStatement)
+				if !ok {
+					t.Errorf("expStmt not *ast.ExpressionStatement. got=%T", stmt)
+					continue
+				}
+
+				ident, ok := expStmt.Expression.(*ast.FunctionLiteral)
+				if !ok {
+					t.Errorf("expStmt not *ast.IfExpression. got=%T", expStmt.Expression)
+					continue
+				}
+
+				if len(ident.Parameters) != tt.exp.paramCount {
+					t.Errorf("Parameters does not contain %d. got = %d", tt.exp.paramCount, len(ident.Parameters))
+				}
+
+				// Todo attach exp field
+				testLiteralExpression(t, ident.Parameters[0], "x")
+				testLiteralExpression(t, ident.Parameters[1], "y")
+
+				if len(ident.Body.Statements) != 1 {
+					t.Fatalf("ident.Body.Statements does not contain %d. got = %d", 1, len(ident.Body.Statements))
+				}
+
+				bodyStmt, ok := ident.Body.Statements[0].(*ast.ExpressionStatement)
+				if !ok {
+					t.Fatalf("function body stmt is not ast.ExpressionStatement. got=%T", ident.Body.Statements[0])
+				}
+
+				testInfixExpression(t, bodyStmt.Expression, "x", "+", "y")
+			}
+		})
+	}
+}
+
+func TestFunctionParameterParsing(t *testing.T) {
+	type fields struct {
+		input string
+	}
+	type exp struct {
+		values []string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		exp    exp
+	}{
+		{
+			name: "fn() {};",
+			fields: fields{
+				input: `fn() {};`,
+			},
+			exp: exp{
+				values: []string{},
+			},
+		},
+		{
+			name: "fn(x) {};",
+			fields: fields{
+				input: `fn(x) {};`,
+			},
+			exp: exp{
+				values: []string{"x"},
+			},
+		},
+		{
+			name: "fn(x, y, z) {}",
+			fields: fields{
+				input: `fn(x, y, z) {}`,
+			},
+			exp: exp{
+				values: []string{"x", "y", "z"},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := lexer.New(tt.fields.input)
+			p := New(l)
+
+			program := p.ParseProgram()
+			checkParseErrors(t, p)
+
+			if program == nil {
+				t.Fatalf("ParseProgram() returned nil")
+			}
+
+			for _, stmt := range program.Statements {
+				expStmt, ok := stmt.(*ast.ExpressionStatement)
+				if !ok {
+					t.Errorf("expStmt not *ast.ExpressionStatement. got=%T", stmt)
+					continue
+				}
+
+				ident, ok := expStmt.Expression.(*ast.FunctionLiteral)
+				if !ok {
+					t.Errorf("expStmt not *ast.IfExpression. got=%T", expStmt.Expression)
+					continue
+				}
+
+				if len(ident.Parameters) != len(tt.exp.values) {
+					t.Errorf("Parameters does not contain %d. got = %d", len(tt.exp.values), len(ident.Parameters))
+				}
+
+				for i, idt := range tt.exp.values {
+					testLiteralExpression(t, ident.Parameters[i], idt)
+				}
+			}
+		})
+	}
+}
+
 func TestIntegerLiteralExpression(t *testing.T) {
 	type fields struct {
 		input string
@@ -793,10 +948,6 @@ func TestParsingInfixExpressions(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestFunctionLiteralParsing(t *testing.T) {
-
 }
 
 func TestOperatorPresedenceParsing(t *testing.T) {
