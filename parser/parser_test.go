@@ -284,7 +284,6 @@ func TestIfExpression(t *testing.T) {
 	}
 }
 
-// Todo
 func TestIfElseExpression(t *testing.T) {
 	type fields struct {
 		input string
