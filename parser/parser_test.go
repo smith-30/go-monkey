@@ -522,6 +522,67 @@ func TestFunctionParameterParsing(t *testing.T) {
 	}
 }
 
+func TestCallExpressionParsing(t *testing.T) {
+	type fields struct {
+		input string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+	}{
+		{
+			name: "add(1, 2 * 3, 4 + 5)",
+			fields: fields{
+				input: `add(1, 2 * 3, 4 + 5)`,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := lexer.New(tt.fields.input)
+			p := New(l)
+
+			program := p.ParseProgram()
+			checkParseErrors(t, p)
+
+			if program == nil {
+				t.Fatalf("ParseProgram() returned nil")
+			}
+
+			if len(program.Statements) != 1 {
+				t.Fatalf("Program.Statements does not contain %d statements. got = %d", 1, len(program.Statements))
+			}
+
+			for _, stmt := range program.Statements {
+				expStmt, ok := stmt.(*ast.ExpressionStatement)
+				if !ok {
+					t.Errorf("expStmt not *ast.ExpressionStatement. got=%T", stmt)
+					continue
+				}
+
+				ident, ok := expStmt.Expression.(*ast.CallExpression)
+				if !ok {
+					t.Errorf("expStmt not *ast.CallExpression. got=%T", expStmt.Expression)
+					continue
+				}
+
+				if !testIdentifier(t, ident.Function, "add") {
+					return
+				}
+
+				if len(ident.Arguments) != 3 {
+					t.Errorf("Arguments does not contain %d. got = %d", 3, len(ident.Arguments))
+				}
+
+				testLiteralExpression(t, ident.Arguments[0], 1)
+				testInfixExpression(t, ident.Arguments[1], 2, "*", 3)
+				testInfixExpression(t, ident.Arguments[2], 4, "+", 5)
+			}
+		})
+	}
+}
+
 func TestIntegerLiteralExpression(t *testing.T) {
 	type fields struct {
 		input string
@@ -950,7 +1011,7 @@ func TestParsingInfixExpressions(t *testing.T) {
 	}
 }
 
-func TestOperatorPresedenceParsing(t *testing.T) {
+func TestOperatorPrecedenceParsing(t *testing.T) {
 	type fields struct {
 		input string
 	}
@@ -1061,6 +1122,21 @@ func TestOperatorPresedenceParsing(t *testing.T) {
 			name:   "!(true == true)",
 			fields: fields{input: `!(true == true)`},
 			exp:    exp{val: "(!(true == true))"},
+		},
+		{
+			name:   "a + add(b * c) + d",
+			fields: fields{input: `a + add(b * c) + d`},
+			exp:    exp{val: "((a + add((b * c))) + d)"},
+		},
+		{
+			name:   "add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))",
+			fields: fields{input: `add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))`},
+			exp:    exp{val: "add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))"},
+		},
+		{
+			name:   "add(a + b + c * d/ f + g)",
+			fields: fields{input: `add(a + b + c * d/ f + g)`},
+			exp:    exp{val: "add((((a + b) + ((c * d) / f)) + g))"},
 		},
 	}
 
