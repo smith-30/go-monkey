@@ -27,6 +27,6 @@ jobs:
       - run: go get github.com/mattn/goveralls
       - run: go get -v -t ./...
       - run: make vet
-      - run: make test
+      - run: make ci-test
       - run: gover
       - run: goveralls -v -service=circle-ci -coverprofile=gover.coverprofile -repotoken $COVERALLS_TOKEN
