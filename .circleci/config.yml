@@ -27,6 +27,7 @@ jobs:
       - run: go get github.com/mattn/goveralls
       - run: go get -v -t ./...
       - run: make vet
+      # refs https://jbub.eu/2017/12/02/go-test-coverage/ & https://github.com/mattn/goveralls/pull/74
       - run: go test -v github.com/smith-30/go-monkey/ast -coverprofile=ast.coverprofile
       - run: go test -v github.com/smith-30/go-monkey/lexer -coverprofile=lexer.coverprofile
       - run: go test -v github.com/smith-30/go-monkey/parser -coverprofile=parser.coverprofile
