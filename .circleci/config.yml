@@ -29,4 +29,4 @@ jobs:
       - run: make vet
       - run: make ci-test
       - run: gover
-      - run: goveralls -v -service=circle-ci -coverprofile=gover.coverprofile -repotoken $COVERALLS_TOKEN
+      - run: goveralls -v -service=circle-ci -coverprofile=coverage.out -repotoken $COVERALLS_TOKEN
