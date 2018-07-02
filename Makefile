@@ -12,4 +12,4 @@ test:
 	go test -v $(GOFILES)
 
 ci-test:
-	go test -v -cover -race $(GOFILES) -coverprofile=coverage.out
+	go test -v -cover -race -coverpkg=./... $(GOFILES) -coverprofile=coverage.out
