@@ -28,5 +28,5 @@ jobs:
       - run: go get -v -t ./...
       - run: make vet
       - run: make test
-      #- run: gover
-      #- run: goveralls -v -service=circle-ci -coverprofile=gover.coverprofile -repotoken $COVERALLS_TOKEN
+      - run: gover
+      - run: goveralls -v -service=circle-ci -coverprofile=gover.coverprofile -repotoken $COVERALLS_TOKEN
