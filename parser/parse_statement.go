@@ -23,8 +23,10 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 
 	p.nextToken()
 
+	stmt.ReturnValue = p.parseExpression(LOWEST)
+
 	// Todo: We skipped reading until it reaches the semicolon.
-	for !p.currentTokenIs(token.SEMICOLON) {
+	if !p.currentTokenIs(token.SEMICOLON) {
 		p.nextToken()
 	}
 
@@ -44,8 +46,12 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 		return nil
 	}
 
+	p.nextToken()
+
+	stmt.Value = p.parseExpression(LOWEST)
+
 	// Todo: We skipped reading until it reaches the semicolon.
-	for !p.currentTokenIs(token.SEMICOLON) {
+	if !p.currentTokenIs(token.SEMICOLON) {
 		p.nextToken()
 	}
 

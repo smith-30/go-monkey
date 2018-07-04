@@ -15,25 +15,34 @@ func TestLetStatement(t *testing.T) {
 	type want struct {
 		expectedIdentifier string
 	}
+	type wantVal struct {
+		val interface{}
+	}
 
 	tests := []struct {
-		name   string
-		fields fields
-		wants  []want
+		name     string
+		fields   fields
+		wants    []want
+		wantVals []wantVal
 	}{
 		{
 			name: "let",
 			fields: fields{
 				input: `
 let x = 5;
-let y = 10;
-let foobar = 838383;
+let y = true;
+let foobar = y;
 `,
 			},
 			wants: []want{
 				{"x"},
 				{"y"},
 				{"foobar"},
+			},
+			wantVals: []wantVal{
+				{5},
+				{true},
+				{"y"},
 			},
 		},
 	}
@@ -56,6 +65,11 @@ let foobar = 838383;
 			for i, w := range tt.wants {
 				stmt := program.Statements[i]
 				if !testLetStatement(t, stmt, w.expectedIdentifier) {
+					return
+				}
+
+				val := stmt.(*ast.LetStatement).Value
+				if !testLiteralExpression(t, val, tt.wantVals[i].val) {
 					return
 				}
 			}
@@ -93,21 +107,30 @@ func TestReturnStatements(t *testing.T) {
 	type fields struct {
 		input string
 	}
+	type wantVal struct {
+		val interface{}
+	}
 	tests := []struct {
-		name   string
-		fields fields
-		want   int
+		name     string
+		fields   fields
+		want     int
+		wantVals []wantVal
 	}{
 		{
 			name: "return",
 			fields: fields{
 				input: `
 return 5;
-return 10;
-return 838383;
+return true;
+return y;
 `,
 			},
 			want: 3,
+			wantVals: []wantVal{
+				{5},
+				{true},
+				{"y"},
+			},
 		},
 	}
 
@@ -127,7 +150,7 @@ return 838383;
 				t.Fatalf("Program.Statements does not contain %d statements. got = %d", tt.want, len(program.Statements))
 			}
 
-			for _, stmt := range program.Statements {
+			for i, stmt := range program.Statements {
 				returnStmt, ok := stmt.(*ast.ReturnStatement)
 				if !ok {
 					t.Errorf("stmt not *ast.returnStatement. got=%T", stmt)
@@ -135,6 +158,10 @@ return 838383;
 				}
 				if returnStmt.TokenLiteral() != "return" {
 					t.Errorf("returnStmt.TokenLiteral is not 'return', got %q", returnStmt.TokenLiteral())
+				}
+				val := returnStmt.ReturnValue
+				if !testLiteralExpression(t, val, tt.wantVals[i].val) {
+					return
 				}
 			}
 		})
@@ -1193,7 +1220,7 @@ func testLiteralExpression(t *testing.T, exp ast.Expression, expected interface{
 		return testBooleanLiteral(t, exp, v)
 	}
 
-	t.Errorf("type of exp not handled. got=%T", exp)
+	t.Errorf("type of exp not handled. got=%T, expected=%#v", exp, expected)
 	return false
 }
 
