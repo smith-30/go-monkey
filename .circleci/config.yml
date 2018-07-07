@@ -31,5 +31,6 @@ jobs:
       - run: go test -v github.com/smith-30/go-monkey/ast -coverprofile=ast.coverprofile
       - run: go test -v github.com/smith-30/go-monkey/lexer -coverprofile=lexer.coverprofile
       - run: go test -v github.com/smith-30/go-monkey/parser -coverprofile=parser.coverprofile
+      - run: go test -v github.com/smith-30/go-monkey/evaluator -coverprofile=evaluator.coverprofile
       - run: gover
       - run: goveralls -v -service=circle-ci -coverprofile=gover.coverprofile -repotoken $COVERALLS_TOKEN
