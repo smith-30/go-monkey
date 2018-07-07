@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/smith-30/go-monkey/evaluator"
 	"github.com/smith-30/go-monkey/lexer"
 	"github.com/smith-30/go-monkey/parser"
 )
@@ -23,7 +24,7 @@ const (
         '._ '-=-' _.'
 	   '-----'
 	   @smith-30
-	   
+
 `
 )
 
@@ -47,8 +48,11 @@ func Start(in io.Reader, out io.Writer) {
 			continue
 		}
 
-		io.WriteString(out, program.String())
-		io.WriteString(out, "\n")
+		evaluated := evaluator.Eval(program)
+		if evaluated != nil {
+			io.WriteString(out, evaluated.Inspect())
+			io.WriteString(out, "\n")
+		}
 
 	}
 }
