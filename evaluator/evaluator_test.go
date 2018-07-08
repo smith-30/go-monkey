@@ -122,6 +122,43 @@ func TestEvalBangOperator(t *testing.T) {
 	}
 }
 
+func TestIfElseExpression(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		exp   interface{}
+	}{
+		{"1", "if (true) { 10 }", 10},
+		{"2", "if (false) { 10 }", nil},
+		{"3", "if (1) { 10 }", 10},
+		{"4", "if (1 < 2) { 10 }", 10},
+		{"5", "if (1 > 2) { 10 }", nil},
+		{"6", "if (1 < 2) { 10 } else { 20 }", 10},
+		{"7", "if (1 > 2) { 10 } else { 20 }", 20},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			evaluated := testEval(tt.input)
+			integer, ok := tt.exp.(int)
+			if ok {
+				testIntegerObject(t, evaluated, int64(integer))
+			} else {
+				testNullObject(t, evaluated)
+			}
+
+		})
+	}
+}
+
+func testNullObject(t *testing.T, obj object.Object) bool {
+	if obj != NULL {
+		t.Errorf("object is not NULL. got=%T (%+v)", obj, obj)
+		return false
+	}
+	return true
+}
+
 func testEval(i string) object.Object {
 	l := lexer.New(i)
 	p := parser.New(l)
