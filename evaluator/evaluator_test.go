@@ -159,6 +159,39 @@ func testNullObject(t *testing.T, obj object.Object) bool {
 	return true
 }
 
+func TestReturnStatements(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		exp   int64
+	}{
+		{"1", "return 10;", 10},
+		{"2", "return 10; 9;", 10},
+		{"3", "return 2 * 5; 9;", 10},
+		{"4", "9; return 2 * 5; 9;", 10},
+		{
+			"5",
+			`
+if (10 > 1) {
+	if (10 > 1) {
+		return 10;
+	}
+
+	return 1;
+}
+			`,
+			10,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			evaluated := testEval(tt.input)
+			testIntegerObject(t, evaluated, tt.exp)
+		})
+	}
+}
+
 func testEval(i string) object.Object {
 	l := lexer.New(i)
 	p := parser.New(l)
