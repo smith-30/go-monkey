@@ -54,3 +54,15 @@ func (rv *ReturnValue) Inspect() string {
 func (rv *ReturnValue) Type() ObjectType {
 	return RETURN_VALUE_OBJ
 }
+
+type Error struct {
+	Message string
+}
+
+func (e *Error) Inspect() string {
+	return "ERROR: " + e.Message
+}
+
+func (e *Error) Type() ObjectType {
+	return ERROR_OBJ
+}
