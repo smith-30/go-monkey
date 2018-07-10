@@ -241,7 +241,7 @@ func TestErrorHandling(t *testing.T) {
 		},
 		{
 			"8",
-			`foobar`,
+			`foobar;`,
 			"identifier not found: foobar",
 		},
 	}
