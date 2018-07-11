@@ -182,6 +182,27 @@ if (10 > 1) {
 			`,
 			10,
 		},
+		{
+			"6",
+			`
+let f = fn(x) {
+  return x;
+  x + 10;
+};
+f(10);`,
+			10,
+		},
+		{
+			"7",
+			`
+let f = fn(x) {
+   let result = x + 10;
+   return result;
+   return 10;
+};
+f(10);`,
+			20,
+		},
 	}
 
 	for _, tt := range tests {
@@ -302,6 +323,67 @@ func TestFunctionObject(t *testing.T) {
 	expBody := "(x + 2)"
 	if fn.Body.String() != expBody {
 		t.Fatalf("Body is not %q. got=%q", expBody, fn.Body.String())
+	}
+}
+
+func TestFunctionApplication(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		exp   int64
+	}{
+		{
+			input: "let identity = fn(x) { x; }; identity(5);",
+			exp:   5,
+		},
+		{
+			input: "let identity = fn(x) { return x; }; identity(5);",
+			exp:   5,
+		},
+		{
+			input: "let double = fn(x) { x * 2; }; double(5)",
+			exp:   10,
+		},
+		{
+			input: "let add = fn(x, y) { x + y; }; add(5, 5)",
+			exp:   10,
+		},
+		{
+			input: "let add = fn(x, y) { x + y; }; add(5 + 5, add(5, 5))",
+			exp:   20,
+		},
+		{
+			input: "fn(x) { x; }(5)",
+			exp:   5,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testIntegerObject(t, testEval(tt.input), tt.exp)
+		})
+	}
+}
+
+func TestClosures(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+	}{
+		{
+			input: `
+			let newAdder = fn(x) {
+				fn(y) {x + y};
+			};
+
+			let addTwo = newAdder(2);
+			addTwo(2);
+			`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testIntegerObject(t, testEval(tt.input), 4)
+		})
 	}
 }
 
