@@ -42,7 +42,7 @@ var (
 		token.MINUS:    SUM,
 		token.SLASH:    PRODUCT,
 		token.ASTERISK: PRODUCT,
-		token.LPAREN: CALL,
+		token.LPAREN:   CALL,
 	}
 )
 
@@ -62,6 +62,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.LPAREN, p.parseGroupExpression)
 	p.registerPrefix(token.IF, p.parseIfExpression)
 	p.registerPrefix(token.FUNCTION, p.parseFunctionLiteral)
+	p.registerPrefix(token.STRING, p.parseStringLiteral)
 
 	p.infixParseFns = make(map[token.TokenType]infixParseFn)
 	p.registerInfix(token.EQ, p.parseInfixExpression)
@@ -150,6 +151,12 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 	}
 
 	lit.Value = val
+	return lit
+}
+
+func (p *Parser) parseStringLiteral() ast.Expression {
+	lit := &ast.StringLiteral{Token: p.currentToken}
+	lit.Value = p.currentToken.Literal
 	return lit
 }
 
