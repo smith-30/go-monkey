@@ -42,8 +42,8 @@ func (l *Lexer) NextToken() token.Token {
 			l.readChar()
 			literal := string(ch) + string(l.ch)
 			t = token.Token{
-				Type: token.EQ,
-				Literal: literal, 
+				Type:    token.EQ,
+				Literal: literal,
 			}
 		} else {
 			t = token.NewToken(token.ASSIGN, l.ch)
@@ -71,8 +71,8 @@ func (l *Lexer) NextToken() token.Token {
 			l.readChar()
 			literal := string(ch) + string(l.ch)
 			t = token.Token{
-				Type: token.NOT_EQ,
-				Literal: literal, 
+				Type:    token.NOT_EQ,
+				Literal: literal,
 			}
 		} else {
 			t = token.NewToken(token.BANG, l.ch)
@@ -85,6 +85,9 @@ func (l *Lexer) NextToken() token.Token {
 		t = token.NewToken(token.LT, l.ch)
 	case '>':
 		t = token.NewToken(token.GT, l.ch)
+	case '"':
+		t.Type = token.STRING
+		t.Literal = l.readString()
 	case 0:
 		t.Literal = ""
 		t.Type = token.EOF
@@ -122,6 +125,18 @@ func (l *Lexer) readNumber() string {
 		l.readChar()
 	}
 	return l.input[position:l.position]
+}
+
+func (l *Lexer) readString() string {
+	position := l.position + 1
+	for {
+		l.readChar()
+		if l.ch == '"' || l.ch == 0 {
+			break
+		}
+	}
+	return l.input[position:l.position]
+
 }
 
 // peek -> 覗き見

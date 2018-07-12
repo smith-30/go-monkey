@@ -56,6 +56,8 @@ if (5 < 10) {
 10 == 10;
 10 != 9;
 
+"foobar"
+"foo bar"
 `,
 			},
 			want: []token.Token{
@@ -132,6 +134,8 @@ if (5 < 10) {
 				token.Token{Type: token.NOT_EQ, Literal: "!="},
 				token.Token{Type: token.INT, Literal: "9"},
 				token.Token{Type: token.SEMICOLON, Literal: ";"},
+				token.Token{Type: token.STRING, Literal: "foobar"},
+				token.Token{Type: token.STRING, Literal: "foo bar"},
 				token.Token{Type: token.EOF, Literal: ""},
 			},
 		},
