@@ -387,6 +387,32 @@ func TestClosures(t *testing.T) {
 	}
 }
 
+func TestStringLiteral(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		exp   string
+	}{
+		{
+			input: `"Hello World!;"`,
+			exp:   "Hello World!;",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			evaluated := testEval(tt.input)
+			s, ok := evaluated.(*object.String)
+			if !ok {
+				t.Fatalf("object is not String. got=%T (%+v)", evaluated, evaluated)
+			}
+
+			if s.Value != tt.exp {
+				t.Errorf("string has wrong value. got=%q", s.Value)
+			}
+		})
+	}
+}
+
 func testEval(i string) object.Object {
 	l := lexer.New(i)
 	p := parser.New(l)

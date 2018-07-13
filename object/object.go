@@ -27,6 +27,18 @@ func (i *Integer) Type() ObjectType {
 	return INTEGER_OBJ
 }
 
+type String struct {
+	Value string
+}
+
+func (s *String) Inspect() string {
+	return s.Value
+}
+
+func (s *String) Type() ObjectType {
+	return STRING_OBJ
+}
+
 type Boolean struct {
 	Value bool
 }
