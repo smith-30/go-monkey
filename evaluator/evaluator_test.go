@@ -265,6 +265,11 @@ func TestErrorHandling(t *testing.T) {
 			`foobar;`,
 			"identifier not found: foobar",
 		},
+		{
+			"9",
+			`"Hello" - "World"`,
+			"unknown operator: STRING - STRING",
+		},
 	}
 
 	for _, tt := range tests {
@@ -408,6 +413,33 @@ func TestStringLiteral(t *testing.T) {
 
 			if s.Value != tt.exp {
 				t.Errorf("string has wrong value. got=%q", s.Value)
+			}
+		})
+	}
+}
+
+func Test(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		exp   string
+	}{
+		{
+			input: `"Hello" + " " + "World!"`,
+			exp:   "Hello World!",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			evaluated := testEval(tt.input)
+
+			str, ok := evaluated.(*object.String)
+			if !ok {
+				t.Fatalf("object is not String. got=%T (%+v)", evaluated, evaluated)
+			}
+
+			if str.Value != tt.exp {
+				t.Errorf("String has wrong value. got=%q", str.Value)
 			}
 		})
 	}
