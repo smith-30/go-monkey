@@ -418,7 +418,7 @@ func TestStringLiteral(t *testing.T) {
 	}
 }
 
-func Test(t *testing.T) {
+func TestStringConcat(t *testing.T) {
 	tests := []struct {
 		name  string
 		input string
@@ -440,6 +440,53 @@ func Test(t *testing.T) {
 
 			if str.Value != tt.exp {
 				t.Errorf("String has wrong value. got=%q", str.Value)
+			}
+		})
+	}
+}
+
+func TestBuiltinFunctions(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		exp   interface{}
+	}{
+		{
+			input: `len("")`,
+			exp:   0,
+		},
+		{
+			input: `len("four")`,
+			exp:   4,
+		},
+		{
+			input: `len("hello world")`,
+			exp:   11,
+		},
+		{
+			input: `len(1)`,
+			exp:   "argument to `len` not supported, got INTEGER",
+		},
+		{
+			input: `len("one", "two")`,
+			exp:   "wrong number of arguments. got=2, want=1",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			evaluated := testEval(tt.input)
+
+			switch exp := tt.exp.(type) {
+			case int:
+				testIntegerObject(t, evaluated, int64(exp))
+			case string:
+				errObj, ok := evaluated.(*object.Error)
+				if !ok {
+					t.Fatalf("object is not Error. got=%T (%+v)", evaluated, evaluated)
+				}
+				if errObj.Message != tt.exp {
+					t.Errorf("exp=%q. got=%q", tt.exp, errObj.Message)
+				}
 			}
 		})
 	}
