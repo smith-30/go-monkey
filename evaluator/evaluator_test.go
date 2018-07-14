@@ -521,6 +521,67 @@ func Test(t *testing.T) {
 	}
 }
 
+func TestArrayIndexExpressions(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		exp   interface{}
+	}{
+		{
+			input: "[1, 2, 3][0]",
+			exp:   1,
+		},
+		{
+			input: "[1, 2, 3][1]",
+			exp:   2,
+		},
+		{
+			input: "[1, 2, 3][2]",
+			exp:   3,
+		},
+		{
+			input: "let i = 0; [1][i]",
+			exp:   0,
+		},
+		{
+			input: "[1, 2, 3][1 + 1]",
+			exp:   3,
+		},
+		{
+			input: "let myArray = [1, 2, 3]; myArray[2];",
+			exp:   3,
+		},
+		{
+			input: "let myArray = [1, 2, 3]; myArray[0] + myArray[1] + myArray[2]",
+			exp:   6,
+		},
+		{
+			input: "let myArray= [1, 2, 3]; let i = myArray[0]; myArray[i]",
+			exp:   2,
+		},
+		{
+			input: "[1, 2, 3][3]",
+			exp:   nil,
+		},
+		{
+			input: "[1, 2, 3][-1]",
+			exp:   nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			evaluated := testEval(tt.input)
+			integer, ok := tt.exp.(int)
+
+			if ok {
+				testIntegerObject(t, evaluated, int64(integer))
+			} else {
+				testNullObject(t, evaluated)
+			}
+		})
+	}
+}
+
 func testEval(i string) object.Object {
 	l := lexer.New(i)
 	p := parser.New(l)
