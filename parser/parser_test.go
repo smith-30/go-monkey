@@ -921,6 +921,41 @@ func TestParsingPrefixExpressions(t *testing.T) {
 	}
 }
 
+func TestParsingArrayLiterals(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+	}{
+		{
+			input: "[1, 2 * 2, 3 + 3]",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := lexer.New(tt.input)
+			p := New(l)
+
+			program := p.ParseProgram()
+			checkParseErrors(t, p)
+
+			stmt := program.Statements[0].(*ast.ExpressionStatement)
+			arr, ok := stmt.Expression.(*ast.ArrayLiteral)
+
+			if !ok {
+				t.Fatalf("expStmt not *ast.ArrayLiteral. got=%T", stmt)
+			}
+
+			if len(arr.Elements) != 3 {
+				t.Fatalf("len(arr.Elements) not 3. got=%d", len(arr.Elements))
+			}
+
+			testIntegerLiteral(t, arr.Elements[0], 1)
+			testInfixExpression(t, arr.Elements[1], 2, "*", 2)
+			testInfixExpression(t, arr.Elements[2], 3, "+", 3)
+		})
+	}
+}
+
 func testIntegerLiteral(t *testing.T, il ast.Expression, value int64) bool {
 	integer, ok := il.(*ast.IntegerLiteral)
 	if !ok {
