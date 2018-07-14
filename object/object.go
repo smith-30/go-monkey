@@ -126,3 +126,26 @@ func (b *Builtin) Inspect() string {
 func (b *Builtin) Type() ObjectType {
 	return BUILTIN_OBJ
 }
+
+type Array struct {
+	Elements []Object
+}
+
+func (a *Array) Type() ObjectType {
+	return ARRAY_OBJ
+}
+
+func (a *Array) Inspect() string {
+	var out bytes.Buffer
+
+	params := []string{}
+	for _, e := range a.Elements {
+		params = append(params, e.Inspect())
+	}
+
+	out.WriteString("[")
+	out.WriteString(strings.Join(params, ", "))
+	out.WriteString("]")
+
+	return out.String()
+}

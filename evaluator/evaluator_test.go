@@ -492,6 +492,35 @@ func TestBuiltinFunctions(t *testing.T) {
 	}
 }
 
+func Test(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+	}{
+		{
+			input: "[1, 2 * 2, 3 + 3]",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			evaluated := testEval(tt.input)
+
+			arr, ok := evaluated.(*object.Array)
+			if !ok {
+				t.Fatalf("object is not Array. got=%T (%+v)", evaluated, evaluated)
+			}
+
+			if len(arr.Elements) != 3 {
+				t.Fatalf("exp %d, but %d", 3, len(arr.Elements))
+			}
+
+			testIntegerObject(t, arr.Elements[0], 1)
+			testIntegerObject(t, arr.Elements[1], 4)
+			testIntegerObject(t, arr.Elements[2], 6)
+		})
+	}
+}
+
 func testEval(i string) object.Object {
 	l := lexer.New(i)
 	p := parser.New(l)
