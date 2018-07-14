@@ -1305,7 +1305,7 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 		{
 			name:   "a * [1, 2, 3, 4][b * c] * d",
 			fields: fields{input: `a * [1, 2, 3, 4][b * c] * d`},
-			exp:    exp{val: "((a * ([1, 2, 3, 4][(b * c)]) * d))"},
+			exp:    exp{val: "((a * ([1, 2, 3, 4][(b * c)])) * d)"},
 		},
 		{
 			name:   "add(a * b[2], b[1], 2 * [1, 2][1])",
