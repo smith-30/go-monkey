@@ -43,6 +43,7 @@ var (
 		token.SLASH:    PRODUCT,
 		token.ASTERISK: PRODUCT,
 		token.LPAREN:   CALL,
+		token.LBRACKET: INDEX,
 	}
 )
 
@@ -75,6 +76,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.SLASH, p.parseInfixExpression)
 	p.registerInfix(token.ASTERISK, p.parseInfixExpression)
 	p.registerInfix(token.LPAREN, p.parseCallExpression)
+	p.registerInfix(token.LBRACKET, p.parseIndexExpression)
 
 	// read 2 token. both of currentToken and peekToken will be set.
 	p.nextToken()
@@ -184,6 +186,22 @@ func (p *Parser) parseCallExpression(function ast.Expression) ast.Expression {
 
 	expression.Arguments = p.parseExpressionList(token.RPAREN)
 	return expression
+}
+
+func (p *Parser) parseIndexExpression(left ast.Expression) ast.Expression {
+	exp := &ast.IndexExpression{
+		Token: p.currentToken,
+		Left:  left,
+	}
+
+	p.nextToken()
+	exp.Index = p.parseExpression(LOWEST)
+
+	if !p.expectPeek(token.RBRACKET) {
+		return nil
+	}
+
+	return exp
 }
 
 func (p *Parser) parseArrayLiteral() ast.Expression {
