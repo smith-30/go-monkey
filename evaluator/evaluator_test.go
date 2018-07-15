@@ -582,6 +582,56 @@ func TestArrayIndexExpressions(t *testing.T) {
 	}
 }
 
+func TestHashLiteralList(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		exp   map[object.HashKey]int64
+	}{
+		{
+			input: `let two = "two";
+			{
+				"one": 10 - 9,
+				two: 1 + 1,
+				"thr" + "ee": 6 / 2,
+				4: 4,
+				true: 5,
+				false: 6
+			}`,
+			exp: map[object.HashKey]int64{
+				(&object.String{Value: "one"}).HashKey():   1,
+				(&object.String{Value: "two"}).HashKey():   2,
+				(&object.String{Value: "three"}).HashKey(): 3,
+				(&object.Integer{Value: 4}).HashKey():      4,
+				TRUE.HashKey():                             5,
+				FALSE.HashKey():                            6,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			evaluated := testEval(tt.input)
+			result, ok := evaluated.(*object.Hash)
+			if !ok {
+				t.Fatalf("object is not Hash. got=%T (%+v)", evaluated, evaluated)
+			}
+
+			if len(result.Pairs) != len(tt.exp) {
+				t.Fatalf("Hash has wrong num of pairs. got=%d", len(result.Pairs))
+			}
+
+			for expKey, expVal := range tt.exp {
+				pair, ok := result.Pairs[expKey]
+				if !ok {
+					t.Errorf("no pair for given key in Pairs")
+				}
+				testIntegerObject(t, pair.Value, expVal)
+			}
+
+		})
+	}
+}
+
 func testEval(i string) object.Object {
 	l := lexer.New(i)
 	p := parser.New(l)
