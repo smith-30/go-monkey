@@ -1,6 +1,10 @@
 package evaluator
 
-import "github.com/smith-30/go-monkey/object"
+import (
+	"fmt"
+
+	"github.com/smith-30/go-monkey/object"
+)
 
 //
 // monkey's array is static so push and rest do copy original array and return
@@ -100,6 +104,14 @@ var builtins = map[string]*object.Builtin{
 			newElems[l] = args[1]
 
 			return &object.Array{Elements: newElems}
+		},
+	},
+	"puts": &object.Builtin{
+		Fn: func(args ...object.Object) object.Object {
+			for _, v := range args {
+				fmt.Println(v.Inspect())
+			}
+			return NULL
 		},
 	},
 }
