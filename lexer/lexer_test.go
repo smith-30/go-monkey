@@ -59,6 +59,7 @@ if (5 < 10) {
 "foobar"
 "foo bar"
 [1, 2];
+{"foo": "bar"}
 `,
 			},
 			want: []token.Token{
@@ -143,6 +144,11 @@ if (5 < 10) {
 				token.Token{Type: token.INT, Literal: "2"},
 				token.Token{Type: token.RBRACKET, Literal: "]"},
 				token.Token{Type: token.SEMICOLON, Literal: ";"},
+				token.Token{Type: token.LBRACE, Literal: "{"},
+				token.Token{Type: token.STRING, Literal: "foo"},
+				token.Token{Type: token.COLON, Literal: ":"},
+				token.Token{Type: token.STRING, Literal: "bar"},
+				token.Token{Type: token.RBRACE, Literal: "}"},
 				token.Token{Type: token.EOF, Literal: ""},
 			},
 		},
