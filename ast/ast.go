@@ -317,7 +317,7 @@ func (bs *BlockStatement) String() string {
 type (
 	// <expression>[<expression>] ex.) array[0]
 	IndexExpression struct {
-		Token token.Token // '[' トークン
+		Token token.Token // '[' token
 		Left  Expression
 		Index Expression
 	}
@@ -338,6 +338,34 @@ func (ie *IndexExpression) String() string {
 	out.WriteString(ie.Index.String())
 	out.WriteString("]")
 	out.WriteString(")")
+
+	return out.String()
+}
+
+type (
+	// {<expression> : <expression>, <expression>: <expression>, ...}
+	HashLiteral struct {
+		Token token.Token // '{' token
+		Pairs map[Expression]Expression
+	}
+)
+
+func (hl *HashLiteral) expressionNode() {}
+
+func (hl *HashLiteral) TokenLiteral() string {
+	return hl.Token.Literal
+}
+
+func (hl *HashLiteral) String() string {
+	var out bytes.Buffer
+
+	pairs := []string{}
+	for k, v := range hl.Pairs {
+		pairs = append(pairs, k.String()+":"+v.String())
+	}
+	out.WriteString("{")
+	out.WriteString(strings.Join(pairs, ", "))
+	out.WriteString("}")
 
 	return out.String()
 }

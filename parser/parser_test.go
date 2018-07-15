@@ -1175,6 +1175,137 @@ func TestParsingInfixExpressions(t *testing.T) {
 	}
 }
 
+func TestParsingHashLiteralStringKeys(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		exp   map[string]int64
+	}{
+		{
+			input: `{"one": 1, "two": 2, "three": 3}`,
+			exp: map[string]int64{
+				"one":   1,
+				"two":   2,
+				"three": 3,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := lexer.New(tt.input)
+			p := New(l)
+
+			program := p.ParseProgram()
+			checkParseErrors(t, p)
+
+			stmt := program.Statements[0].(*ast.ExpressionStatement)
+			hash, ok := stmt.Expression.(*ast.HashLiteral)
+			if !ok {
+				t.Fatalf("expStmt not *ast.HashLiteral. got=%T", stmt.Expression)
+			}
+
+			if len(hash.Pairs) != 3 {
+				t.Fatalf("len(hash.Pairs) not 3. got=%d", len(hash.Pairs))
+			}
+
+			for k, v := range hash.Pairs {
+				literal, ok := k.(*ast.StringLiteral)
+				if !ok {
+					t.Errorf("k is not ast.StringLiteral. got=%T", k)
+				}
+
+				expVal := tt.exp[literal.String()]
+				testIntegerLiteral(t, v, expVal)
+			}
+		})
+	}
+}
+
+func TestParsingEmptyHashLiteral(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+	}{
+		{
+			input: "{}",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := lexer.New(tt.input)
+			p := New(l)
+
+			program := p.ParseProgram()
+			checkParseErrors(t, p)
+
+			stmt := program.Statements[0].(*ast.ExpressionStatement)
+			hash, ok := stmt.Expression.(*ast.HashLiteral)
+			if !ok {
+				t.Fatalf("expStmt not *ast.HashLiteral. got=%T", stmt.Expression)
+			}
+
+			if len(hash.Pairs) != 0 {
+				t.Fatalf("len(hash.Pairs) not 0. got=%d", len(hash.Pairs))
+			}
+		})
+	}
+}
+
+func TestParsingEmptyHashLiteralWithExpressions(t *testing.T) {
+	tests := []struct {
+		name      string
+		input     string
+		testFuncs map[string]func(ast.Expression)
+	}{
+		{
+			input: `{"one": 0 + 1, "two": 10 - 8, "three": 15 / 5}`,
+			testFuncs: map[string]func(ast.Expression){
+				"one": func(e ast.Expression) {
+					testInfixExpression(t, e, 0, "+", 1)
+				},
+				"two": func(e ast.Expression) {
+					testInfixExpression(t, e, 10, "-", 8)
+				},
+				"three": func(e ast.Expression) {
+					testInfixExpression(t, e, 15, "/", 5)
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := lexer.New(tt.input)
+			p := New(l)
+
+			program := p.ParseProgram()
+			checkParseErrors(t, p)
+
+			stmt := program.Statements[0].(*ast.ExpressionStatement)
+			hash, ok := stmt.Expression.(*ast.HashLiteral)
+			if !ok {
+				t.Fatalf("expStmt not *ast.HashLiteral. got=%T", stmt.Expression)
+			}
+
+			if len(hash.Pairs) != 3 {
+				t.Fatalf("len(hash.Pairs) not 3. got=%d", len(hash.Pairs))
+			}
+
+			for k, v := range hash.Pairs {
+				literal, ok := k.(*ast.StringLiteral)
+				if !ok {
+					t.Errorf("k is not ast.StringLiteral. got=%T", k)
+				}
+
+				testFunc, ok := tt.testFuncs[literal.String()]
+				if !ok {
+					t.Errorf("No test function for key %q found", literal.String())
+				}
+				testFunc(v)
+			}
+		})
+	}
+}
+
 func TestOperatorPrecedenceParsing(t *testing.T) {
 	type fields struct {
 		input string
