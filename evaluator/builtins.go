@@ -2,6 +2,9 @@ package evaluator
 
 import "github.com/smith-30/go-monkey/object"
 
+//
+// monkey's array is static so push and rest do copy original array and return
+//
 var builtins = map[string]*object.Builtin{
 	"len": &object.Builtin{
 		Fn: func(args ...object.Object) object.Object {
@@ -78,6 +81,25 @@ var builtins = map[string]*object.Builtin{
 			}
 
 			return NULL
+		},
+	},
+	"push": &object.Builtin{
+		Fn: func(args ...object.Object) object.Object {
+			if len(args) != 2 {
+				return newError("wrong number of arguments. got=%d, want=2", len(args))
+			}
+
+			if args[0].Type() != object.ARRAY_OBJ {
+				return newError("argument to `rest` must be Array, got=%s", args[0].Type())
+			}
+
+			arr := args[0].(*object.Array)
+			l := len(arr.Elements)
+			newElems := make([]object.Object, l+1, l+1)
+			copy(newElems, arr.Elements)
+			newElems[l] = args[1]
+
+			return &object.Array{Elements: newElems}
 		},
 	},
 }
