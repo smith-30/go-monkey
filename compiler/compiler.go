@@ -1,6 +1,7 @@
 package compiler
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/smith-30/go-monkey/ast"
@@ -20,6 +21,8 @@ func New() *Compiler {
 	}
 }
 func (c *Compiler) Compile(node ast.Node) error {
+	bss, _ := json.MarshalIndent(node, "", "	")
+	fmt.Printf("%v\n", string(bss))
 	switch node := node.(type) {
 	case *ast.Program:
 		for _, item := range node.Statements {
@@ -33,6 +36,8 @@ func (c *Compiler) Compile(node ast.Node) error {
 		if err != nil {
 			return err
 		}
+		// 式の評価が終わった段階で pop を呼び出して掃除する。
+		c.emit(code.OpPop)
 	case *ast.InfixExpression:
 		err := c.Compile(node.Left)
 		if err != nil {

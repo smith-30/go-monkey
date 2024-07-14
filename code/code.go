@@ -13,6 +13,7 @@ type Opcode byte
 const (
 	OpConstant Opcode = iota
 	OpAdd
+	OpPop
 )
 
 type Definition struct {
@@ -24,6 +25,7 @@ var definitions = map[Opcode]*Definition{
 	// 実行すると、オペランドをインデックスとして定数を取り出し、スタックにプッシュする
 	OpConstant: {"OpConstant", []int{2}},
 	OpAdd:      {"OpAdd", []int{}},
+	OpPop:      {"Oppop", []int{}},
 }
 
 func Lookup(op byte) (*Definition, error) {
