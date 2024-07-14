@@ -22,7 +22,11 @@ func New(bytecode *compiler.Bytecode) *VM {
 		instructions: bytecode.Instructions,
 		constants:    bytecode.Constants,
 		stack:        make([]object.Object, StackSize),
-		sp:           0,
+		// 次の空きスロットを管理する
+		// もしスタック上のインデックス0に1つの要素があれば、spの値は1になり、
+		// その要素にアクセスするにはstack[sp-1]を使う。
+		// 新しい要素は、spがインクリメントされる前にstack[sp]に格納される。
+		sp: 0,
 	}
 }
 
@@ -44,6 +48,14 @@ func (vm *VM) Run() error {
 			if err != nil {
 				return err
 			}
+		case code.OpAdd:
+			right := vm.pop()
+			left := vm.pop()
+			leftValue := left.(*object.Integer).Value
+			rightValue := right.(*object.Integer).Value
+
+			result := leftValue + rightValue
+			vm.push(&object.Integer{Value: result})
 		}
 
 	}
@@ -57,4 +69,10 @@ func (vm *VM) push(o object.Object) error {
 	vm.stack[vm.sp] = o
 	vm.sp++
 	return nil
+}
+
+func (vm *VM) pop() object.Object {
+	o := vm.stack[vm.sp-1]
+	vm.sp--
+	return o
 }

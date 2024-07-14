@@ -1,6 +1,8 @@
 package compiler
 
 import (
+	"fmt"
+
 	"github.com/smith-30/go-monkey/ast"
 	"github.com/smith-30/go-monkey/code"
 	"github.com/smith-30/go-monkey/object"
@@ -40,8 +42,18 @@ func (c *Compiler) Compile(node ast.Node) error {
 		if err != nil {
 			return err
 		}
+
+		switch node.Operator {
+		case "+":
+			c.emit(code.OpAdd)
+		default:
+			return fmt.Errorf("unknown operator %s", node.Operator)
+		}
+
 	case *ast.IntegerLiteral:
 		integer := &object.Integer{Value: node.Value}
+		// vm が保持している constants の index を渡す。
+		// vm はその index を利用し値を取り出す
 		c.emit(code.OpConstant, c.addConstant(integer))
 	}
 
