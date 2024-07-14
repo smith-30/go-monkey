@@ -16,7 +16,9 @@ func main() {
 
 	fmt.Printf("Hello \x1b[32m%s\x1b[0m! This is the Monkey programming language!\n", user.Username)
 	fmt.Printf("Feel free to type in commands\n")
-	repl.Start(os.Stdin, os.Stdout)
+	// Start: start interpreter
+	// StartVM: start vm
+	repl.StartVM(os.Stdin, os.Stdout)
 }
 
 // let map = fn(arr, f) {
