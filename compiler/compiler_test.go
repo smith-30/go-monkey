@@ -245,3 +245,33 @@ func testIntegerObject(expected int64, actual object.Object) error {
 	}
 	return nil
 }
+
+func TestConditionals(t *testing.T) {
+	tests := []compilerTestCase{
+		{
+			input: `
+		if (true) { 10 }; 3333;
+		`,
+			expectedConstants: []interface{}{10, 3333},
+			expectedInstructions: []code.Instructions{
+				// 0000
+				code.Make(code.OpTrue),
+				// 0001
+				code.Make(code.OpJumpNotTruthy, 7),
+				// 0004
+				code.Make(code.OpConstant, 0),
+				// 0007
+				// Monkeyの条件式は式であり、if (true) { 10 }は10と評価されるため
+				// 値が未使用の式は *ast.ExpressionStatement でラップされる
+				// vm のスタックをクリアするために、OpPop 命令を追加してコンパイルする
+				// 式として評価されるから、pop しておかないとという理解
+				code.Make(code.OpPop),
+				// 0008
+				code.Make(code.OpConstant, 1),
+				// 0011
+				code.Make(code.OpPop),
+			},
+		},
+	}
+	runCompilerTests(t, tests)
+}

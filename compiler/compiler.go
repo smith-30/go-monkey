@@ -104,6 +104,19 @@ func (c *Compiler) Compile(node ast.Node) error {
 		} else {
 			c.emit(code.OpFalse)
 		}
+
+	case *ast.IfExpression:
+		err := c.Compile(node.Condition)
+		if err != nil {
+			return err
+		}
+		// Emit an `OpJumpNotTruthy` with a bogus value
+		c.emit(code.OpJumpNotTruthy, 9999)
+		// 内部の
+		err = c.Compile(node.Consequence)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

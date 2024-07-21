@@ -200,8 +200,8 @@ type (
 	// if (<condition>) <consequence> else <alternative>
 	IfExpression struct {
 		Token       token.Token // expects if
-		Condition   Expression
-		Consequence *BlockStatement
+		Condition   Expression // 条件式の条件 if () {} の () 部分 
+		Consequence *BlockStatement // 条件式の条件に対応する式 if () {} の {} 部分 
 		Alternative *BlockStatement
 	}
 )
