@@ -8,9 +8,18 @@ import (
 	"github.com/smith-30/go-monkey/object"
 )
 
+// コンパイラが最後に実行した2つの命令（そのオペコードと実行された位置を含む）を追跡するように変更する。
 type Compiler struct {
 	instructions code.Instructions
 	constants    []object.Object
+
+	lastInstruction     EmittedInstruction
+	previousInstruction EmittedInstruction
+}
+
+type EmittedInstruction struct {
+	Opcode   code.Opcode
+	Position int
 }
 
 func New() *Compiler {
@@ -117,9 +126,30 @@ func (c *Compiler) Compile(node ast.Node) error {
 		if err != nil {
 			return err
 		}
+
+		if c.lastInstructionIsPop() {
+			c.removeLastPop()
+		}
+
+	case *ast.BlockStatement:
+		for _, item := range node.Statements {
+			err := c.Compile(item)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil
+}
+
+func (c *Compiler) lastInstructionIsPop() bool {
+	return c.lastInstruction.Opcode == code.OpPop
+}
+
+func (c *Compiler) removeLastPop() {
+	c.instructions = c.instructions[:c.lastInstruction.Position]
+	c.lastInstruction = c.previousInstruction
 }
 
 func (c *Compiler) addConstant(obj object.Object) int {
@@ -133,7 +163,17 @@ func (c *Compiler) addConstant(obj object.Object) int {
 func (c *Compiler) emit(op code.Opcode, operands ...int) int {
 	ins := code.Make(op, operands...)
 	pos := c.addInstruction(ins)
+
+	c.setLastInstruction(op, pos)
+
 	return pos
+}
+
+func (c *Compiler) setLastInstruction(op code.Opcode, pos int) {
+	previous := c.lastInstruction
+	last := EmittedInstruction{Opcode: op, Position: pos}
+	c.previousInstruction = previous
+	c.lastInstruction = last
 }
 
 func (c *Compiler) addInstruction(ins []byte) int {
