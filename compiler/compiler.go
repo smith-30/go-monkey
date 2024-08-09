@@ -132,6 +132,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 			c.removeLastPop()
 		}
 
+		//  バックパッチ, シングルパスコンパイラー
 		afterConsequencePos := len(c.instructions)
 		c.changeOperand(jumpNotTruthyPos, afterConsequencePos)
 
