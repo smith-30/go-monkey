@@ -132,9 +132,29 @@ func (c *Compiler) Compile(node ast.Node) error {
 			c.removeLastPop()
 		}
 
-		//  バックパッチ, シングルパスコンパイラー
-		afterConsequencePos := len(c.instructions)
-		c.changeOperand(jumpNotTruthyPos, afterConsequencePos)
+		// node.Alternative がない場合のみ、c.instruction の現在位置であるここにジャンプできる
+		if node.Alternative == nil {
+			//  バックパッチ, シングルパスコンパイラー
+			afterConsequencePos := len(c.instructions)
+			c.changeOperand(jumpNotTruthyPos, afterConsequencePos)
+		} else {
+			// Emit and `OpJump` with a bogus balue
+			jumpPos := c.emit(code.OpJump, 9999)
+			afterConsequencePos := len(c.instructions)
+			c.changeOperand(jumpNotTruthyPos, afterConsequencePos)
+
+			err := c.Compile(node.Alternative)
+			if err != nil {
+				return err
+			}
+
+			if c.lastInstructionIsPop() {
+				c.removeLastPop()
+			}
+
+			afterAlternativePos := len(c.instructions)
+			c.changeOperand(jumpPos, afterAlternativePos)
+		}
 
 	case *ast.BlockStatement:
 		for _, item := range node.Statements {

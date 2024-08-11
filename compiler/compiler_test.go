@@ -252,7 +252,7 @@ func TestConditionals(t *testing.T) {
 			input: `
 		if (true) { 10 } else { 20 }; 3333;
 		`,
-			expectedConstants: []interface{}{10, 3333},
+			expectedConstants: []interface{}{10, 20, 3333},
 			expectedInstructions: []code.Instructions{
 				// 0000
 				code.Make(code.OpTrue),
