@@ -121,13 +121,21 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 
 		// Emit an `OpJumpNotTruthy` with a bogus value
+		// true ではない場合、どこにジャンプさせるかは後から決める
+		// true 内部の評価をしないと false の場合にどこから処理が開始されるか決定できないため
 		jumpNotTruthyPos := c.emit(code.OpJumpNotTruthy, 9999)
 
+		// 内部式の評価
 		err = c.Compile(node.Consequence)
 		if err != nil {
 			return err
 		}
 
+		// Consequence 評価後に pop で終わっている場合は削除する
+		// なぜなら、IfExpression 評価後にPopは付与されるため重複してしまうから
+		// let result = if (5 > 3) { 5 } else { 3 }; のような式に対応できない
+		// ちなみに、上記の式のように値が未使用の単体の式は*ast.ExpressionStatementでラップされるから
+		// Consequence 評価後に OpPop が付与されてしまう。これは Monkey の条件式が式であることによる。
 		if c.lastInstructionIsPop() {
 			c.removeLastPop()
 		}
@@ -135,11 +143,15 @@ func (c *Compiler) Compile(node ast.Node) error {
 		// node.Alternative がない場合のみ、c.instruction の現在位置であるここにジャンプできる
 		if node.Alternative == nil {
 			//  バックパッチ, シングルパスコンパイラー
+			// 内部式の評価が終わったのでjumpNotTruthyPos を書き換える
 			afterConsequencePos := len(c.instructions)
 			c.changeOperand(jumpNotTruthyPos, afterConsequencePos)
 		} else {
 			// Emit and `OpJump` with a bogus balue
+			// else 式の評価後にどこに飛ぶか覚えていないといけない
 			jumpPos := c.emit(code.OpJump, 9999)
+			// Alternative がないときと同じように、式の評価は完了しているので
+			// jumpNotTruthyPos を書き換える
 			afterConsequencePos := len(c.instructions)
 			c.changeOperand(jumpNotTruthyPos, afterConsequencePos)
 
@@ -152,10 +164,12 @@ func (c *Compiler) Compile(node ast.Node) error {
 				c.removeLastPop()
 			}
 
+			// 式の評価後はどこに飛ばすかわかるので書き換える
 			afterAlternativePos := len(c.instructions)
 			c.changeOperand(jumpPos, afterAlternativePos)
 		}
 
+	// if { XXXXX; YYY; } など式内部のコンパイル
 	case *ast.BlockStatement:
 		for _, item := range node.Statements {
 			err := c.Compile(item)
@@ -178,6 +192,7 @@ func (c *Compiler) replaceInstruction(pos int, newInstruction []byte) {
 	}
 }
 
+// 同じ型、同じ非変数の長さの命令だけを置き換える
 func (c *Compiler) changeOperand(opPos int, operand int) {
 	op := code.Opcode(c.instructions[opPos])
 	newInstruction := code.Make(op, operand)
@@ -195,7 +210,7 @@ func (c *Compiler) addConstant(obj object.Object) int {
 }
 
 // emit はコンパイラ用語で、"generate"（生成する）と "output"（出力する）を意味する
-// 命令を生成し、それを印刷したり、ファイルに書き込んだり、
+// 命令を生成し、それをprintしたり、ファイルに書き込んだり、
 // メモリ上のコレクションに追加したりして、結果に追加する
 func (c *Compiler) emit(op code.Opcode, operands ...int) int {
 	ins := code.Make(op, operands...)
