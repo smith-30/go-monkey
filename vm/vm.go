@@ -86,10 +86,32 @@ func (vm *VM) Run() error {
 			}
 		case code.OpPop:
 			vm.pop()
+		case code.OpJump:
+			pos := int(code.ReadUint16(vm.instructions[ip+1:]))
+			ip = pos - 1
+		case code.OpJumpNotTruthy:
+			pos := int(code.ReadUint16(vm.instructions[ip+1:]))
+			// 2 byte 読んだ分を進める
+			ip += 2
+
+			condition := vm.pop()
+			// false だったら jump させる
+			if !isTruthy(condition) {
+				ip = pos - 1
+			}
 		}
 
 	}
 	return nil
+}
+
+func isTruthy(obj object.Object) bool {
+	switch obj := obj.(type) {
+	case *object.Boolean:
+		return obj.Value
+	default:
+		return true
+	}
 }
 
 func (vm *VM) push(o object.Object) error {
