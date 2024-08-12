@@ -140,21 +140,19 @@ func (c *Compiler) Compile(node ast.Node) error {
 			c.removeLastPop()
 		}
 
+		// Emit and `OpJump` with a bogus balue
+		// else 式の評価後にどこに飛ぶか覚えていないといけない
+		jumpPos := c.emit(code.OpJump, 9999)
+
+		//  バックパッチ, シングルパスコンパイラー
+		// 内部式の評価が終わったのでjumpNotTruthyPos を書き換える
+		afterConsequencePos := len(c.instructions)
+		c.changeOperand(jumpNotTruthyPos, afterConsequencePos)
+
 		// node.Alternative がない場合のみ、c.instruction の現在位置であるここにジャンプできる
 		if node.Alternative == nil {
-			//  バックパッチ, シングルパスコンパイラー
-			// 内部式の評価が終わったのでjumpNotTruthyPos を書き換える
-			afterConsequencePos := len(c.instructions)
-			c.changeOperand(jumpNotTruthyPos, afterConsequencePos)
+			c.emit(code.OpNull)
 		} else {
-			// Emit and `OpJump` with a bogus balue
-			// else 式の評価後にどこに飛ぶか覚えていないといけない
-			jumpPos := c.emit(code.OpJump, 9999)
-			// Alternative がないときと同じように、式の評価は完了しているので
-			// jumpNotTruthyPos を書き換える
-			afterConsequencePos := len(c.instructions)
-			c.changeOperand(jumpNotTruthyPos, afterConsequencePos)
-
 			err := c.Compile(node.Alternative)
 			if err != nil {
 				return err
@@ -163,11 +161,11 @@ func (c *Compiler) Compile(node ast.Node) error {
 			if c.lastInstructionIsPop() {
 				c.removeLastPop()
 			}
-
-			// 式の評価後はどこに飛ばすかわかるので書き換える
-			afterAlternativePos := len(c.instructions)
-			c.changeOperand(jumpPos, afterAlternativePos)
 		}
+
+		// 式の評価後はどこに飛ばすかわかるので書き換える
+		afterAlternativePos := len(c.instructions)
+		c.changeOperand(jumpPos, afterAlternativePos)
 
 	// if { XXXXX; YYY; } など式内部のコンパイル
 	case *ast.BlockStatement:
