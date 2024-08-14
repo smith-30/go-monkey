@@ -8,6 +8,8 @@ import (
 	"github.com/smith-30/go-monkey/object"
 )
 
+const GlobalsSize = 65536
+
 const StackSize = 2048
 
 var True = &object.Boolean{Value: true}
@@ -20,6 +22,7 @@ type VM struct {
 	instructions code.Instructions
 	stack        []object.Object
 	sp           int // Always points to the next value. Top of stack is stack[sp-1]
+	globals      []object.Object
 }
 
 func New(bytecode *compiler.Bytecode) *VM {
@@ -31,7 +34,8 @@ func New(bytecode *compiler.Bytecode) *VM {
 		// もしスタック上のインデックス0に1つの要素があれば、spの値は1になり、
 		// その要素にアクセスするにはstack[sp-1]を使う。
 		// 新しい要素は、spがインクリメントされる前にstack[sp]に格納される。
-		sp: 0,
+		sp:      0,
+		globals: make([]object.Object, GlobalsSize),
 	}
 }
 
@@ -103,6 +107,18 @@ func (vm *VM) Run() error {
 			}
 		case code.OpNull:
 			err := vm.push(Null)
+			if err != nil {
+				return err
+			}
+		case code.OpSetGlobal:
+			globalIndex := code.ReadUint16(vm.instructions[ip+1:])
+			ip += 2
+
+			vm.globals[globalIndex] = vm.pop()
+		case code.OpGetGlobal:
+			globalIndex := code.ReadUint16(vm.instructions[ip+1:])
+			ip += 2
+			err := vm.push(vm.globals[globalIndex])
 			if err != nil {
 				return err
 			}
