@@ -43,6 +43,11 @@ func testExpectedObject(
 	t.Helper()
 
 	switch expected := expected.(type) {
+	case string:
+		err := testStringObject(expected, actual)
+		if err != nil {
+			t.Errorf("testIntegerObject failed: %s", err)
+		}
 	case int:
 		err := testIntegerObject(int64(expected), actual)
 		if err != nil {
@@ -64,6 +69,17 @@ func parse(input string) *ast.Program {
 	l := lexer.New(input)
 	p := parser.New(l)
 	return p.ParseProgram()
+}
+
+func testStringObject(expected string, actual object.Object) error {
+	result, ok := actual.(*object.String)
+	if !ok {
+		return fmt.Errorf("object is not String. got=%T (%+v)", actual, actual)
+	}
+	if result.Value != expected {
+		return fmt.Errorf("object has wrong value. got=%vf, want=%s", result.Value, expected)
+	}
+	return nil
 }
 
 func testIntegerObject(expected int64, actual object.Object) error {
@@ -157,6 +173,15 @@ func TestGlobalLetStatements(t *testing.T) {
 		{"let one = 1; one", 1},
 		{"let one = 1; let two = 2; one + two", 3},
 		{"let one = 1; let two = one + one; one + two", 3},
+	}
+	runVmTests(t, tests)
+}
+
+func TestStringExpressions(t *testing.T) {
+	tests := []vmTestCase{
+		{`"monkey"`, "monkey"},
+		{`"mon" + "key"`, "monkey"},
+		{`"mon" + "key" + "banana"`, "monkeybanana"},
 	}
 	runVmTests(t, tests)
 }
