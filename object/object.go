@@ -7,7 +7,22 @@ import (
 	"strings"
 
 	"github.com/smith-30/go-monkey/ast"
+	"github.com/smith-30/go-monkey/code"
 )
+
+const (
+	COMPILED_FUNCTION_OBJ = "COMPILED_FUNCTION_OBJ"
+)
+
+type CompiledFunction struct {
+	Instructions code.Instructions
+}
+
+func (cf *CompiledFunction) Type() ObjectType { return COMPILED_FUNCTION_OBJ }
+
+func (cf *CompiledFunction) Inspect() string {
+	return fmt.Sprintf("CompiledFunction[%p]", cf)
+}
 
 type ObjectType string
 
