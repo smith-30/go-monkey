@@ -10,6 +10,7 @@ import (
 	"github.com/smith-30/go-monkey/code"
 )
 
+// 関数リテラルは*object.CompiledFunctionsにコンパイルして定数として扱う
 const (
 	COMPILED_FUNCTION_OBJ = "COMPILED_FUNCTION_OBJ"
 )

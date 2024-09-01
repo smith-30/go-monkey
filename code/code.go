@@ -32,6 +32,9 @@ const (
 	OpArray
 	OpHash
 	OpIndex
+	OpCall
+	OpReturnValue
+	OpReturn
 )
 
 type Definition struct {
@@ -62,7 +65,22 @@ var definitions = map[Opcode]*Definition{
 	OpArray:         {"OpArray", []int{2}},
 	OpHash:          {"OpHash", []int{2}},
 	OpIndex:         {"OpIndex", []int{}},
+	OpCall:          {"OpCall", []int{}},
+	// 暗黙的リターンも明示的リターンも同じオペコードで表現
+	OpReturnValue: {"OpReturnValue", []int{}},
+	// スタックの一番上にある値を返すようにVMに指示する。
+	OpReturn: {"OpReturn", []int{}},
 }
+
+// 下記のような暗黙的 return に対応する必要がある
+// fn() { 5 + 10 }
+// fn() { return 5 + 10 }
+// fn() { }
+// fn() { let a = 1; }
+
+// 関数の最後にOpReturnValue命令がない場合は、
+// 関数からvm.Nullを返すようにVMに指示する必要があるということだ。
+// そのためには、別のオペコードを導入する必要がある。
 
 func Lookup(op byte) (*Definition, error) {
 	def, ok := definitions[Opcode(op)]
