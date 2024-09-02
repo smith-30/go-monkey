@@ -9,6 +9,12 @@ import (
 	"github.com/smith-30/go-monkey/object"
 )
 
+type CompilationScope struct {
+	instructions        code.Instructions
+	lastInstruction     EmittedInstruction
+	previousInstruction EmittedInstruction
+}
+
 // コンパイラが最後に実行した2つの命令（そのオペコードと実行された位置を含む）を追跡するように変更する。
 type Compiler struct {
 	instructions code.Instructions
@@ -18,6 +24,11 @@ type Compiler struct {
 	previousInstruction EmittedInstruction
 
 	symbolTable *SymbolTable
+
+	// コンパイラとして emit するときのスコープを管理できるようにする
+	// これがあることで、コンパイル中にメインの処理などの成果物を破壊しなくなる。
+	scopes     []CompilationScope
+	scopeIndex int
 }
 
 type EmittedInstruction struct {
