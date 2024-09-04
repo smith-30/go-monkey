@@ -6,6 +6,7 @@ import (
 	"fmt"
 )
 
+// Instructionは、コンピュータが理解できる命令.今回は VM になる?
 type Instructions []byte
 
 type Opcode byte
